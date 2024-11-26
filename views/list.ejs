@@ -1,15 +1,25 @@
 <!doctype html>
 <html>
   <head>
-    <title>Welcome to <%=shopData.shopName%></title>
+    <title>Welcome to <%=siteData.siteName%></title>
     <link rel="stylesheet"  type="text/css" href="/main.css" />
   </head>
   <body>
-    <h1><%=shopData.shopName%> Shop</h1>
-    <h2>Here are the books that we sell:</h2>
+    <h1><%=siteData.siteName%></h1>
+    <h2>Events:</h2>
     <ul>
-      <% availableBooks.forEach(function(book) { %>
-        <li><%= book.name %>, £<%=book.price%> </li>
+      <% events.forEach(function(event) { %>
+        <li>
+          <div class="eventCard">
+            <h1 class="eventTitle"><%=event.name%></h1>
+            <p>Price: <%=event.fees%></p>
+            <p>Location: <%=event.location%></p>
+            <p>Date: <%=event.date%></p>
+            <p><%= event.startTime + " - " + event.endTime%></p>
+            <p><%=event.description%></p>
+            <p>Organised by: <%=event.username%></p>
+          </div>
+        </li>
       <% }) %>
     </ul>
     </body>

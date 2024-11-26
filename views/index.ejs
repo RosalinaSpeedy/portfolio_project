@@ -5,15 +5,44 @@
     <link rel="stylesheet"  type="text/css" href="/main.css" />
   </head>
   <body>
-    <h1>Welcome to <%=siteData.siteName%></h1>
-    <p><a href="about">About <%=siteData.siteName%></a></p>
-    <p><a href="books/search">Search for books</a></p>
-    <p><a href="books/addbook">Add a new book</a></p>
-    <p><a href="books/list">List books</a></p>
-    <p><a href="books/bargainbooks">Bargain books</a></p>
-    <p><a href="users/register">Register with us</a></p>
-    <p><a href="users/login">Log in</a></p>
-    <p><a href="users/logout">Log out</a></p>
-    <p><a href="weather/londonnow">Weather</a></p>
+    <header id="topBar">
+      <img class="logo" src="../Abdul-Jinadu.jpg" height="90px" width="280px">
+      <h1 id="mainTitle"><%=siteData.siteName%></h1>
+      <nav class="topNav">
+        <input id="globalSearch" type="text" placeholder="Search..">
+      </nav>
+      <div class="vertical">
+        <img class="profilePic" src="../Abdul-Jinadu.jpg" height="65px" width="65px">
+        <div class="profilePane">
+          <% if (isLoggedIn) { %>
+            <a href="users/logout">Log Out</a>
+          <% } else { %>
+            <a href="users/login">Log In</a>
+          <% } %>
+        </div>
+      </div>
+    </header>
+    <div class="mainBody">
+      <div id="sideNav">
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/events/list">Events</a>
+      </div>
+      <div class="indexMainBody">
+        <h1>Welcome to <%=siteData.siteName%></h1>
+        <p><a href="books/search">Search for books</a></p>
+        <p><a href="books/addbook">Add a new book</a></p>
+        <p><a href="books/list">List books</a></p>
+        <p><a href="books/bargainbooks">Bargain books</a></p>
+        <p><a href="users/register">Register with us</a></p>
+        <p><a href="users/login">Log in</a></p>
+        <p><a href="users/logout">Log out</a></p>
+        <p><a href="weather/londonnow">Weather</a></p>
+      </div>
+    </div>
+    <footer>
+      <a href="">Contact us...</a>
+      <img class="logo">
+    </footer>
   </body>
 </html>

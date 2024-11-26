@@ -1,11 +1,41 @@
 <!doctype html>
 <html>
   <head>
-    <title>About <%=shopData.shopName%></title>
+    <title>Welcome to <%=siteData.siteName%></title>
     <link rel="stylesheet"  type="text/css" href="/main.css" />
   </head>
   <body>
-    <h1>About <%=shopData.shopName%></h1>
-    <p>We sell all sorts of books and nothing else!</p>
+    <header id="topBar">
+      <img class="logo" src="../Abdul-Jinadu.jpg" height="90px" width="280px">
+      <h1 id="mainTitle"><%=siteData.siteName%></h1>
+      <nav class="topNav">
+        <input id="globalSearch" type="text" placeholder="Search..">
+      </nav>
+      <div class="vertical">
+        <img class="profilePic" src="../Abdul-Jinadu.jpg" height="65px" width="65px">
+        <div class="profilePane">
+          <% if (isLoggedIn) { %>
+            <a href="users/logout">Log Out</a>
+          <% } else { %>
+            <a href="users/login">Log In</a>
+          <% } %>
+        </div>
+      </div>
+    </header>
+    <div class="mainBody">
+      <div id="sideNav">
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/events">Events</a>
+      </div>
+      <div class="indexMainBody">
+        <h1>About <%=siteData.siteName%></h1>
+        <p>Insert about here</p>
+      </div>
+    </div>
+    <footer>
+      <a href="">Contact us...</a>
+      <img class="logo">
+    </footer>
   </body>
 </html>

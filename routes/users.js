@@ -83,9 +83,26 @@ router.post('/loggedin', function (req, res, next) {
                 next(err)
             }
             else if (result == true) {
+                req.session.userId = null;
+                req.session.databaseId = null;
                 // Save user session here, when login is successful
-                req.session.userId = req.body.username;
-                res.redirect('../')
+                let idQuery = "SELECT id FROM users WHERE username = \"" + req.body.username + "\"";
+                db.query(idQuery, (err, result1) => {
+                    if (err) {
+                        next(err)
+                    }
+                    else if (result1.length == 1) {
+                        console.log(result1[0].id);
+                        console.log(req.session.databaseId)
+                        req.session.userId = req.body.username;
+                        req.session.databaseId = result1[0].id;
+                        console.log(req.session);
+                        res.redirect('../')
+                    }
+                    else {
+                        console.log("Wrong number of users found!")
+                    }
+                })
             }
             else {
                 res.send("Login failed!");

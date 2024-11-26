@@ -52,7 +52,7 @@ app.use(session({
 }))
 
 // Define our application-specific data
-app.locals.siteData = { siteName: "" }
+app.locals.siteData = { siteName: "EventEnthusiast" }
 
 // Load the route handlers
 const mainRoutes = require("./routes/main")
@@ -63,8 +63,8 @@ const usersRoutes = require('./routes/users')
 app.use('/users', usersRoutes)
 
 // Load the route handlers for /books
-const booksRoutes = require('./routes/books')
-app.use('/books', booksRoutes)
+const eventsRoutes = require('./routes/events')
+app.use('/events', eventsRoutes)
 
 // Load the route handlers for /weather
 const weatherRoutes = require('./routes/weather')

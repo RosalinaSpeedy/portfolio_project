@@ -1,15 +1,16 @@
 <!doctype html>
 <html>
   <head>
-    <title>Log in to <%=shopData.shopName%></title>
+    <title>Log in to <%=siteData.siteName%></title>
     <link rel="stylesheet"  type="text/css" href="/main.css" />
   </head>
   <body>
-    <h1>Log in to <%=shopData.shopName%></h1>
+    <h1>Log in to <%=siteData.siteName%></h1>
     <form method="POST" action="loggedin">
         <p>username: <input id="username" type="text" name="username" /></p>
         <p>password: <input id="password" type="text" name="password"/></p>
         <input type="submit" value="log in" />
       </form>
+      <a href="../users/register">New here? Register</a>
   </body>
 </html>
