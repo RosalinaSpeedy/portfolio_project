@@ -11,18 +11,50 @@ const redirectLogin = (req, res, next) => {
 const express = require("express")
 const router = express.Router()
 
-router.get('/search_result', redirectLogin, function (req, res, next) {
-    // Search the database
-    let sqlquery = "SELECT * FROM events WHERE name LIKE '%" + req.sanitize(req.query.search_text) + "%'" // query database to get all the events
-    // execute sql query
-    db.query(sqlquery, (err, result) => {
-        if (err) {
-            next(err)
+function getEvents(pageName, filters) {
+    return new Promise((resolve, reject) => {
+        var query = `SELECT * FROM events 
+            JOIN users ON events.organiserId = users.id WHERE 1=1 `;
+        //var parameters = [];
+        console.log(filters);
+        if (filters.searchText != '') {
+            console.log(filters.searchText);
+            query += ` AND CONCAT_WS(' ', users.username, events.name, events.description) LIKE '%${filters.searchText}%' `;
+        } 
+        if (filters.date != '') {
+            query += `AND events.date='${filters.date}' `
         }
-        res.render("list.ejs", { events: result })
+        if (filters.location != '') {
+            console.log(filters.location);
+        }
+        if (filters.distance != '') {
+            console.log(filters.distance);
+        }
+        if (filters.ticketCost != '') {
+            query += ` AND events.fees<='${filters.ticketCost}' `
+        }
+        console.log(query);
+        db.query(query, (err, result) => {
+            if (err) {
+              console.error(err.message);
+              reject(err); // if there is an error reject the Promise
+            } else {
+            for (let i = 0; i < result.length; i++) {
+                let startingTime = new Date();
+                let [startHours, startMinutes, startSeconds] = result[i].startTime.split(':').map(Number);
+                startingTime.setHours(startHours, startMinutes, startSeconds);
+                endingTime = new Date();
+                endingTime.setHours(startHours, startMinutes, startSeconds);
+                endingTime.setMinutes(startingTime.getMinutes() + result[i].duration);
+                endingTime = endingTime.toTimeString().split(' ')[0];
+                result[i].endTime = endingTime;
+            }
+            console.log(result)
+            resolve(result); // the Promise is resolved with the result of the query
+            }
+        });
     })
-})
-
+}
 
 router.get('/list', redirectLogin, function (req, res, next) {
     let sqlquery = "SELECT events.*, users.username FROM events JOIN users ON events.organiserId = users.id" // query database to get all the books
@@ -41,7 +73,7 @@ router.get('/list', redirectLogin, function (req, res, next) {
             endingTime = endingTime.toTimeString().split(' ')[0];
             result[i].endTime = endingTime;
         }
-        console.log(result);
+        //console.log(result);
         res.render("list.ejs", { events: result })
     })
 })
@@ -107,15 +139,40 @@ router.post('/eventadded', redirectLogin, [check('name').notEmpty(), check('fees
     }
 })
 
-router.get('/bargainbooks', redirectLogin, function (req, res, next) {
-    let sqlquery = "SELECT * FROM books WHERE price < 20"
-    db.query(sqlquery, (err, result) => {
-        if (err) {
-            next(err)
-        }
-        res.render("bargains.ejs", { availableBooks: result })
-    })
+router.get('/search', redirectLogin, function (req, res, next) {
+    res.render("search.ejs")
 })
+
+router.get('/search_result', redirectLogin, function (req, res, next) {
+    console.log(req.query.date);
+    console.log(req.query);
+    filters = {
+        searchText: req.sanitize(req.query.search_text),
+        date: req.query.date,
+        location: req.sanitize(req.query.location),
+        distance: req.query.distance,
+        ticketCost: req.query.ticketCost
+    }
+    console.log(filters);
+    for (var key in filters) {
+        if (filters.hasOwnProperty(key)) {
+            console.log(key + " -> " + filters[key]);
+            if (filters[key] == undefined) filters[key] = '';
+        }
+    }
+    Promise.all([
+        getEvents("search_result", filters)
+    ]).then(([events]) => {
+        res.render("list.ejs", {
+            events
+        });
+    }).catch((error) => {
+        console.log(
+            "Error getting data from database calls or in the code above"
+        );
+    });
+})
+
 
 
 // Export the router object so index.js can access it

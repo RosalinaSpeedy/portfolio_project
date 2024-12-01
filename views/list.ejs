@@ -3,13 +3,14 @@
   <head>
     <title>Welcome to <%=siteData.siteName%></title>
     <link rel="stylesheet"  type="text/css" href="/main.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
   </head>
   <body>
     <h1><%=siteData.siteName%></h1>
     <h2>Events:</h2>
-    <ul>
+    <ul class="eventList">
       <% events.forEach(function(event) { %>
-        <li>
+        <li class="event">
           <div class="eventCard">
             <h1 class="eventTitle"><%=event.name%></h1>
             <p>Price: <%=event.fees%></p>
@@ -22,5 +23,52 @@
         </li>
       <% }) %>
     </ul>
-    </body>
+    <h1>filters</h1>
+    <form id=filters action="search_result" method="GET">
+      <p>Seach by event/organiser name or description:</p>
+      <input id="search_box" type="text" name="search_text" value="">
+      <h1>Filters:</h1>
+      <p>date:<input type="date" id="date" name="date" value=""></p>
+      <p><input type="text" id="location" name="location" placeholder="Enter event address" value=""></p>
+      <p>distance:<select id="distance" name="distance">
+          <option value="5">5 miles</option>
+          <option value="10">10 miles</option>
+          <option value="25">25 miles</option>
+          <option value="50">50 miles</option>
+          <option value="na">N/A</option>
+        </select></p>
+      <p>
+        <input type="range" id="ticketCost" name="ticketCost" min="0" max="500" step="10" value="250"
+          oninput="updateCostValue(this.value)">
+      <p id="ticketCostValue">TIcket cost up to: £250</p>
+      </p>
+      <input type="submit" value="Search">
+    </form>
+  </body>
+  <script>
+    function updateCostValue(val) {
+      document.getElementById('ticketCostValue').innerText = 'Ticket cost up to: £' + val;
+    }
+    $(document).ready(function() {
+        // v1 submit the form every time the data change
+        $('#filters').find('input, select, range').on('change', updateListData);
+      function updateListData() {
+        console.log("changed form")
+        $.ajax({
+          type: "GET",
+          url: './search_result',
+          data: $('#filters').serialize(),
+          success: function (response) {
+            console.log("succeeded")
+            var tempDiv = $('<div>').html(response);
+            var newList = tempDiv.find('.eventList');
+            $('.eventList').html(newList.html());
+            $('.eventList').removeClass('newDataLoadedEffect');
+            void $('.eventList')[0].offsetWidth;
+            $('.eventList').addClass('newDataLoadedEffect');
+          }
+        });
+      }
+    });
+  </script>
 </html>
