@@ -6,12 +6,14 @@ function checkLogin(request) {
     if (!request.session.userId) {
         return false;
     }
-    return true;
+    return {isLoggedIn: true, userId: request.session.databaseId};
 }
 
 // Handle our routes
 router.get('/', function (req, res, next) {
-    res.render('index.ejs', {isLoggedIn: checkLogin(req)}) 
+    user = checkLogin(req);
+    console.log(user);
+    res.render('index.ejs', user) 
 })
 
 router.get('/about', function (req, res, next) {

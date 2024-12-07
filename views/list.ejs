@@ -19,6 +19,12 @@
             <p><%= event.startTime + " - " + event.endTime%></p>
             <p><%=event.description%></p>
             <p>Organised by: <%=event.username%></p>
+            <% if (event.yourEvent || event.userAttending) { %>
+              <p>This is your event!</p>
+              <a href="ammendbooking/<%=event.id%>" id="ammendBookingButton">Get more tickets</a>
+            <% } else { %>
+              <a href="getticket/<%=event.id%>" id="getTicketButton">Get Ticket</a>
+            <% } %>
           </div>
         </li>
       <% }) %>

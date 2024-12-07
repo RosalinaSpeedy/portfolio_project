@@ -2,7 +2,7 @@ const { check, validationResult } = require('express-validator');
 
 const redirectLogin = (req, res, next) => {
     if (!req.session.userId) {
-        res.redirect('../users/login') // redirect to the login page
+        res.redirect('/users/login') // redirect to the login page
     } else {
         next(); // move to the next middleware function
     }
@@ -10,6 +10,17 @@ const redirectLogin = (req, res, next) => {
 
 const express = require("express")
 const router = express.Router()
+
+function calculateEndtime(result) {
+    let startingTime = new Date();
+    let [startHours, startMinutes, startSeconds] = result.startTime.split(':').map(Number);
+    startingTime.setHours(startHours, startMinutes, startSeconds);
+    endingTime = new Date();
+    endingTime.setHours(startHours, startMinutes, startSeconds);
+    endingTime.setMinutes(startingTime.getMinutes() + result.duration);
+    endingTime = endingTime.toTimeString().split(' ')[0];
+    return endingTime;
+}
 
 function getEvents(pageName, filters) {
     return new Promise((resolve, reject) => {
@@ -20,7 +31,7 @@ function getEvents(pageName, filters) {
         if (filters.searchText != '') {
             console.log(filters.searchText);
             query += ` AND CONCAT_WS(' ', users.username, events.name, events.description) LIKE '%${filters.searchText}%' `;
-        } 
+        }
         if (filters.date != '') {
             query += `AND events.date='${filters.date}' `
         }
@@ -36,21 +47,14 @@ function getEvents(pageName, filters) {
         console.log(query);
         db.query(query, (err, result) => {
             if (err) {
-              console.error(err.message);
-              reject(err); // if there is an error reject the Promise
+                console.error(err.message);
+                reject(err); // if there is an error reject the Promise
             } else {
-            for (let i = 0; i < result.length; i++) {
-                let startingTime = new Date();
-                let [startHours, startMinutes, startSeconds] = result[i].startTime.split(':').map(Number);
-                startingTime.setHours(startHours, startMinutes, startSeconds);
-                endingTime = new Date();
-                endingTime.setHours(startHours, startMinutes, startSeconds);
-                endingTime.setMinutes(startingTime.getMinutes() + result[i].duration);
-                endingTime = endingTime.toTimeString().split(' ')[0];
-                result[i].endTime = endingTime;
-            }
-            console.log(result)
-            resolve(result); // the Promise is resolved with the result of the query
+                for (let i = 0; i < result.length; i++) {
+                    result[i].endTime = calculateEndtime(result[i]);
+                }
+                console.log(result)
+                resolve(result); // the Promise is resolved with the result of the query
             }
         });
     })
@@ -64,16 +68,15 @@ router.get('/list', redirectLogin, function (req, res, next) {
             next(err)
         }
         for (let i = 0; i < result.length; i++) {
-            let startingTime = new Date();
-            let [startHours, startMinutes, startSeconds] = result[i].startTime.split(':').map(Number);
-            startingTime.setHours(startHours, startMinutes, startSeconds);
-            endingTime = new Date();
-            endingTime.setHours(startHours, startMinutes, startSeconds);
-            endingTime.setMinutes(startingTime.getMinutes() + result[i].duration);
-            endingTime = endingTime.toTimeString().split(' ')[0];
-            result[i].endTime = endingTime;
+            result[i].endTime = calculateEndtime(result[i]);
+            result[i].yourEvent = false;
+            result[i].attending = false;
+            if (result[i].organiserId == req.session.databaseId) {
+                result[i].yourEvent = true;
+                result[i].attending = true;
+            }
         }
-        //console.log(result);
+        console.log(result);
         res.render("list.ejs", { events: result })
     })
 })
@@ -123,8 +126,8 @@ router.post('/eventadded', redirectLogin, [check('name').notEmpty(), check('fees
             }
             else {
                 let eventId = result.insertId;
-                let attendeeQuery = "INSERT INTO attendees (eventId, userId) VALUES (?, ?)";
-                let attendeeRecord = [eventId, req.session.databaseId];
+                let attendeeQuery = "INSERT INTO attendees (eventId, userId, ticketQuantity) VALUES (?, ?, ?)";
+                let attendeeRecord = [eventId, req.session.databaseId, 1];
                 db.query(attendeeQuery, attendeeRecord, (err, result1) => {
                     if (err) {
                         next(err)
@@ -172,6 +175,86 @@ router.get('/search_result', redirectLogin, function (req, res, next) {
         );
     });
 })
+
+router.get("/getticket/:id", redirectLogin, (req, res) => {
+    try {
+        const eventId = req.params.id;
+        let sqlquery = `SELECT events.*, users.username FROM events JOIN users ON events.organiserId = users.id WHERE events.id=${eventId}`;
+        db.query(sqlquery, (err, result) => {
+            if (err) {
+                next(err)
+            }
+            for (let i = 0; i < result.length; i++) {
+                result[i].endTime = calculateEndtime(result[i]);
+            }
+            //console.log(result);
+            res.render("getticket.ejs", { event: result[0] })
+        })
+    } catch {
+        res.send("Something done gone wrong");
+    }
+});
+
+router.get("/ammendbooking/:id", redirectLogin, (req, res) => {
+    try {
+        const eventId = req.params.id;
+        //let sqlquery = `SELECT events.*, users.username FROM events JOIN users ON events.organiserId = users.id WHERE events.id=${eventId}`;
+        let sqlquery = `SELECT 
+                        events.*, 
+                        users.username, 
+                        attendees.ticketQuantity
+                        FROM 
+                            events
+                        JOIN 
+                            users 
+                            ON events.organiserId = users.id
+                        LEFT JOIN 
+                            attendees 
+                            ON attendees.eventId = events.id AND attendees.userId = ${req.session.databaseId}
+                        WHERE 
+                            events.id = ${eventId};`
+        db.query(sqlquery, (err, result) => {
+            if (err) {
+                next(err)
+            }
+            for (let i = 0; i < result.length; i++) {
+                result[i].endTime = calculateEndtime(result[i]);
+            }
+            //console.log(result);
+            res.render("ammendbooking.ejs", { event: result[0] })
+        })
+    } catch {
+        res.send("Something done gone wrong");
+    }
+});
+
+router.post("/eventbooked/:id", redirectLogin, (req, res) => {
+    try {
+        const eventId = req.params.id;
+        let sqlquery = `SELECT events.*, users.username, users.email FROM events JOIN users ON events.organiserId = users.id WHERE events.id=${eventId}`;
+        let insertquery = `INSERT INTO attendees (eventId, userId, ticketQuantity)
+                           VALUES (?, ?, ?)
+                           ON DUPLICATE KEY UPDATE 
+                           ticketQuantity = VALUES(ticketQuantity);`;
+        db.query(sqlquery, (err, result) => {
+            if (err) {
+                next(err)
+            }
+            result[0].endTime = calculateEndtime(result[0]);
+            insertParams = [result[0].id, req.session.databaseId, req.body.attendees];
+            db.query(insertquery, insertParams, (err, result1) => {
+                if (err) {
+                    res.send("database insert failed");
+                }
+                result.ticketNo = req.body.attendees;
+                res.render("eventbooked.ejs", { event: result[0] })
+            })
+            //console.log(result);
+        })
+    } catch {
+        res.send("Error");
+    }
+});
 
 
 

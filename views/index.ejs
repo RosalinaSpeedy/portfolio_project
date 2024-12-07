@@ -14,8 +14,9 @@
       <div class="vertical">
         <img class="profilePic" src="../Abdul-Jinadu.jpg" height="65px" width="65px">
         <div class="profilePane">
-          <% if (isLoggedIn) { %>
+          <% if (user.isLoggedIn) { %>
             <a href="users/logout">Log Out</a>
+            <a href="users/myevents/<%=user.userId%>">My events</a>
           <% } else { %>
             <a href="users/login">Log In</a>
           <% } %>
