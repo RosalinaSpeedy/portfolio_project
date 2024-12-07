@@ -112,6 +112,31 @@ router.post('/loggedin', function (req, res, next) {
     })
 })
 
+router.get('/myevents/:id', redirectLogin, (req, res) => {
+    try {
+        const userId = req.params.id;
+        let sqlquery = `SELECT events.*
+                        FROM attendees
+                        JOIN events 
+                        ON attendees.eventId = events.id
+                        WHERE attendees.userId = ${userId};`
+        db.query(sqlquery, (err, result) => {
+            if (err) {
+                next(err)
+            }
+            let organiserQuery = `SELECT * FROM events WHERE organiserId = ${userId}`
+            db.query(organiserQuery, (err, result1) => {
+                if (err) {
+                    next(err)
+                }
+                res.render("myevents.ejs", { events: result, bookings: result1 })
+            })
+        })
+    } catch {
+        console.log("Some error occured");
+    }
+})
+
 router.get('/logout', redirectLogin, (req, res) => {
     req.session.destroy(err => {
         if (err) {
