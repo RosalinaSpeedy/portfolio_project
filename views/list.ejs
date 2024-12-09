@@ -4,6 +4,15 @@
     <title>Welcome to <%=siteData.siteName%></title>
     <link rel="stylesheet"  type="text/css" href="/main.css" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <!-- HERE JavaScript Libs & Style Sheets-->
+    <link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css" />
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-core.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-service.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-ui.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"></script>
   </head>
   <body>
     <h1><%=siteData.siteName%></h1>
@@ -50,8 +59,52 @@
       </p>
       <input type="submit" value="Search">
     </form>
+    <div id="mapContainer2" style="width:50%; height:400px"></div>
+    <script> 
+      //Step 1: initialize communication with the platform
+      // Replace variable YOUR_API_KEY with your own apikey
+      var platform = new H.service.Platform({
+          apikey: '<%=apiKey%>',
+          appCode: '<%=appCode%>'
+      });
+      var defaultLayers = platform.createDefaultLayers();
+      //Step 2: initialize a map - this map is centered over Europe
+      var map = new H.Map(document.getElementById('mapContainer2'),
+          defaultLayers.vector.normal.map,
+          {
+              center: { lat: 51.5072, lng: 0.1276 },
+              zoom: 4,
+              pixelRatio: window.devicePixelRatio || 1
+          }
+      );
+      // add a resize listener to make sure that the map occupies the whole container
+      window.addEventListener('resize', () => map.getViewPort().resize());
+      //Step 3: make the map interactive
+      // MapEvents enables the event system
+      // Behavior implements default interactions for pan/zoom (also on mobile touch environments)
+      var behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
+    
+      // Create the default UI components
+      var ui = H.ui.UI.createDefault(map, defaultLayers);
+    
+      //Zooming so that the marker can be clearly visible
+      map.setZoom(8)
+    </script>
   </body>
   <script>
+    function getLocation(){
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+          console.log(longitude + " " + latitude)
+          return {longitude: longitude, latitude: latitude}
+        });
+      } else {
+        console.log("Geolocation is not supported by this browser.");
+        return false;
+      }
+    }
     function updateCostValue(val) {
       document.getElementById('ticketCostValue').innerText = 'Ticket cost up to: £' + val;
     }
@@ -60,21 +113,40 @@
         $('#filters').find('input, select, range').on('change', updateListData);
       function updateListData() {
         console.log("changed form")
+        var locationData = getLocation();
+        console.log(locationData)
         $.ajax({
           type: "GET",
-          url: './search_result',
+          url: `./search_result/${locationData.longitude}/${locationData.latitude}`,
           data: $('#filters').serialize(),
           success: function (response) {
             console.log("succeeded")
+            console.log(response);
             var tempDiv = $('<div>').html(response);
             var newList = tempDiv.find('.eventList');
             $('.eventList').html(newList.html());
             $('.eventList').removeClass('newDataLoadedEffect');
             void $('.eventList')[0].offsetWidth;
             $('.eventList').addClass('newDataLoadedEffect');
+            // for (let i = 0; i < events.length; i++) {
+            //   // Marker code goes here
+            //   var LocationOfMarker = { lat: 51.5072, lng: 0.1276 };
+            
+            //   // optionally - resize a larger PNG image to a specific size
+            //   var pngIcon = new H.map.Icon('/abdulMarker.jpeg', { size: { w: 36, h: 36 } });
+            
+            //   // Create a marker using the previously instantiated icon:
+            //   var marker = new H.map.Marker(LocationOfMarker, { icon: pngIcon });
+            
+            //   // Add the marker to the map:
+            //   map.addObject(marker);
+            // }
+            // Optionally, 
+            //Show the marker in the center of the map
+            map.setCenter(LocationOfMarker)
           }
         });
       }
-    });
+    })
   </script>
 </html>

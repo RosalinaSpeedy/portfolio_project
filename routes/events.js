@@ -1,3 +1,5 @@
+const request = require('request')
+
 const { check, validationResult } = require('express-validator');
 
 const redirectLogin = (req, res, next) => {
@@ -10,6 +12,13 @@ const redirectLogin = (req, res, next) => {
 
 const express = require("express")
 const router = express.Router()
+
+let apiKey = 'tCNGoZKIq4A6VjAmsFcEiXb1u4a56MFNrsUzfEIa3fY'
+let url = `https://js.api.here.com/v3/3.1/`
+let location = "city=Berlin;country=Germany;street=Friedrichstr;houseNumber=20"
+//let location = req.sanitize(req.body.location);
+let appCode = 'MJlbBVYv5uTduZ53sy4N'
+let apiUrl = `https://geocode.search.hereapi.com/v1/geocode?q=${location}&units=metric&appcode=${appCode}&apikey=${apiKey}`
 
 function calculateEndtime(result) {
     let startingTime = new Date();
@@ -26,38 +35,64 @@ function getEvents(pageName, filters) {
     return new Promise((resolve, reject) => {
         var query = `SELECT * FROM events 
             JOIN users ON events.organiserId = users.id WHERE 1=1 `;
-        //var parameters = [];
         console.log(filters);
+
         if (filters.searchText != '') {
             console.log(filters.searchText);
             query += ` AND CONCAT_WS(' ', users.username, events.name, events.description) LIKE '%${filters.searchText}%' `;
         }
         if (filters.date != '') {
-            query += `AND events.date='${filters.date}' `
+            query += `AND events.date='${filters.date}' `;
         }
         if (filters.location != '') {
             console.log(filters.location);
-        }
-        if (filters.distance != '') {
-            console.log(filters.distance);
+            query += ` AND events.location LIKE '%${filters.searchText}%' `;
         }
         if (filters.ticketCost != '') {
-            query += ` AND events.fees<='${filters.ticketCost}' `
+            query += ` AND events.fees<='${filters.ticketCost}' `;
         }
         console.log(query);
-        db.query(query, (err, result) => {
+
+        db.query(query, async (err, result) => {
             if (err) {
                 console.error(err.message);
-                reject(err); // if there is an error reject the Promise
+                reject(err);
             } else {
-                for (let i = 0; i < result.length; i++) {
-                    result[i].endTime = calculateEndtime(result[i]);
+                if (filters.distance != 'na') {
+                    console.log(filters.distance);
+                    let promises = result.map(event => {
+                        event.endTime = calculateEndtime(event);
+                        let tempApiUrl = `https://geocode.search.hereapi.com/v1/geocode?q=${event.location}&units=metric&appcode=${appCode}&apikey=${apiKey}`;
+                        return new Promise((resolve, reject) => {
+                            request(tempApiUrl, function (err, response, body) {
+                                if (err) {
+                                    reject(err);
+                                } else {
+                                    try {
+                                        let loc = JSON.parse(body);
+                                        console.log(loc);
+                                        event.firstRes = loc.items[loc.items.length - 1];
+                                        resolve(event);
+                                    } catch (parseError) {
+                                        reject(parseError);
+                                    }
+                                }
+                            });
+                        });
+                    });
+                    try {
+                        let updatedResults = await Promise.all(promises);
+                        console.log("RESULT");
+                        resolve(updatedResults);
+                    } catch (apiError) {
+                        reject(apiError); 
+                    }
+                } else {
+                    resolve(result);
                 }
-                console.log(result)
-                resolve(result); // the Promise is resolved with the result of the query
             }
         });
-    })
+    });
 }
 
 router.get('/list', redirectLogin, function (req, res, next) {
@@ -77,7 +112,7 @@ router.get('/list', redirectLogin, function (req, res, next) {
             }
         }
         console.log(result);
-        res.render("list.ejs", { events: result })
+        res.render("list.ejs", { events: result, apiKey: apiKey, url: url, appCode: appCode })
     })
 })
 
@@ -86,11 +121,20 @@ router.get('/addevent', redirectLogin, function (req, res, next) {
     res.render('addevent.ejs')
 })
 
-router.post('/eventadded', redirectLogin, [check('name').notEmpty(), check('fees').isDecimal()], function (req, res, next) {
+router.post('/eventadded', redirectLogin, [
+    check('name').notEmpty(),
+    check('country').notEmpty(),
+    check('city').notEmpty(),
+    check('street').notEmpty(),
+    check('houseNumber').notEmpty(),
+    check('postcode').notEmpty(),
+    check('fees').isDecimal()
+], function (req, res, next) {
     console.log(req.session.databaseId)
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        console.log("error")
+        console.log("error");
+        console.log(errors);
         res.redirect('./addevent');
     } else {
         console.log("adding event");
@@ -106,14 +150,26 @@ router.post('/eventadded', redirectLogin, [check('name').notEmpty(), check('fees
             durationMs = endTime - startTime;
         }
         let durationMinutes = Math.floor((durationMs) / (60000));
+        //country, state, county, city, district, street, houseNumber, and postalCode
+        let processedLocation = `country=${req.sanitize(req.body.country)};city=${req.sanitize(req.body.city)};street=${req.sanitize(req.body.street)};houseNumber=${req.sanitize(req.body.houseNumber)};postalCode=${req.sanitize(req.body.postcode)};`;
+        if (req.sanitize(req.body.county) !== undefined) {
+            processedLocation += `county=${req.sanitize(req.body.county)};`
+        }
+        if (req.sanitize(req.body.district) !== undefined) {
+            processedLocation += `district=${req.sanitize(req.body.district)};`
+        }
+        if (req.sanitize(req.body.state) !== undefined) {
+            processedLocation += `state=${req.sanitize(req.body.state)};`
+        }
 
+        console.log(processedLocation)
         //(id INT AUTO_INCREMENT,name VARCHAR(50),fees DECIMAL(5, 2) unsigned, location VARCHAR(50), date DATE, createdAt DATE, updatedAt DATE, startTime TIME, duration INT, status VARCHAR(50), description VARCHAR(100), organiserId INT, FOREIGN KEY (organiserId) REFERENCES users(id), PRIMARY KEY(id));
         let sqlquery = "INSERT INTO events (name, fees, location, date, createdAt, updatedAt, startTime, duration, description, organiserId) VALUES (?,?,?,?,NOW(),NOW(),?,?,?,?)"
         // execute sql query
         let newrecord = [
             req.sanitize(req.body.name),
             req.sanitize(req.body.fees),
-            req.sanitize(req.body.location),
+            processedLocation,
             req.body.date,
             req.body.startTime,
             durationMinutes,
@@ -143,10 +199,20 @@ router.post('/eventadded', redirectLogin, [check('name').notEmpty(), check('fees
 })
 
 router.get('/search', redirectLogin, function (req, res, next) {
-    res.render("search.ejs")
+    console.log(apiUrl)
+    request(apiUrl, function (err, response, body) {
+        if (err) {
+            next(err)
+        } else {
+            let loc = JSON.parse(body)
+            let firstRes = loc.items[0]
+            //res.send(loc.items[0])
+            res.render("search.ejs", { apiKey: apiKey, url: url, appCode: appCode, loc: firstRes })
+        }
+    });
 })
 
-router.get('/search_result', redirectLogin, function (req, res, next) {
+router.get('/search_result/:longitude/:latitude', redirectLogin, function (req, res, next) {
     console.log(req.query.date);
     console.log(req.query);
     filters = {
@@ -166,8 +232,9 @@ router.get('/search_result', redirectLogin, function (req, res, next) {
     Promise.all([
         getEvents("search_result", filters)
     ]).then(([events]) => {
+        console.log(events);
         res.render("list.ejs", {
-            events
+            apiKey: apiKey, url: url, appCode: appCode, events: events
         });
     }).catch((error) => {
         console.log(
@@ -256,7 +323,25 @@ router.post("/eventbooked/:id", redirectLogin, (req, res) => {
     }
 });
 
-
+router.get('/maps', function (req, res, next) {
+    let apiKey = 'tCNGoZKIq4A6VjAmsFcEiXb1u4a56MFNrsUzfEIa3fY'
+    let url = `https://js.api.here.com/v3/3.1/`
+    let location = "city=Berlin;country=Germany;street=Friedrichstr;houseNumber=20"
+    //let location = req.sanitize(req.body.location);
+    let appCode = 'MJlbBVYv5uTduZ53sy4N'
+    let apiUrl = `https://geocode.search.hereapi.com/v1/geocode?q=${location}&units=metric&appcode=${appCode}&apikey=${apiKey}`
+    console.log(apiUrl)
+    request(apiUrl, function (err, response, body) {
+        if (err) {
+            next(err)
+        } else {
+            let loc = JSON.parse(body)
+            let firstRes = loc.items[0]
+            //res.send(loc.items[0])
+            res.render("maps.ejs", { apiKey: apiKey, url: url, appCode: appCode, loc: firstRes })
+        }
+    });
+})
 
 // Export the router object so index.js can access it
 module.exports = router
