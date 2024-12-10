@@ -33,7 +33,7 @@ function calculateEndtime(result) {
 
 function getEvents(pageName, filters) {
     return new Promise((resolve, reject) => {
-        var query = `SELECT * FROM events 
+        var query = `SELECT events.*, users.username FROM events 
             JOIN users ON events.organiserId = users.id WHERE 1=1 `;
         console.log(filters);
 
@@ -52,48 +52,95 @@ function getEvents(pageName, filters) {
             query += ` AND events.fees<='${filters.ticketCost}' `;
         }
         console.log(query);
-
+        console.log(filters);
+        console.log(filters.latitude);
+        console.log(filters.longitude);
         db.query(query, async (err, result) => {
             if (err) {
                 console.error(err.message);
                 reject(err);
+                return;
             } else {
-                if (filters.distance != 'na') {
+                if (filters.distance != 'na' && filters.latitude && filters.longitude) {
                     console.log(filters.distance);
+                    const userLat = parseFloat(filters.latitude);
+                    const userLon = parseFloat(filters.longitude);
+                    const distanceLimit = parseInt(filters.distance);
+                    console.log("Found distance limit: " + distanceLimit)
                     let promises = result.map(event => {
                         event.endTime = calculateEndtime(event);
                         let tempApiUrl = `https://geocode.search.hereapi.com/v1/geocode?q=${event.location}&units=metric&appcode=${appCode}&apikey=${apiKey}`;
                         return new Promise((resolve, reject) => {
                             request(tempApiUrl, function (err, response, body) {
                                 if (err) {
+                                    console.log(err);
                                     reject(err);
+                                    return;
                                 } else {
                                     try {
                                         let loc = JSON.parse(body);
-                                        console.log(loc);
-                                        event.firstRes = loc.items[loc.items.length - 1];
-                                        resolve(event);
-                                    } catch (parseError) {
-                                        reject(parseError);
+                                        if (loc.items[loc.items.length - 1].position !== undefined) {
+                                            console.log(loc.items[loc.items.length - 1])
+                                            console.log(loc.items[loc.items.length - 1].position);
+                                            const eventCoords = loc.items[loc.items.length - 1].position;
+                                            let distance = haversineDistance(
+                                                userLat, userLon,
+                                                eventCoords.lat, eventCoords.lng
+                                            );
+                                            console.log("distance from user: " + distance)
+                                            if (distance <= distanceLimit) {
+                                                console.log("event within the limit found: " + distance)
+                                                event.distance = distance.toFixed(2); // Add distance to event data
+                                                event.longitude = eventCoords.lng;
+                                                event.latitude = eventCoords.lat;
+                                                resolve(event);
+                                            } else {
+                                                console.log("Outside the limit: " + distance)
+                                                resolve(null); // Exclude events outside the range
+                                            } 
+                                        } else {
+                                            resolve(null);
+                                        }
+                                    } catch {
+                                        console.log("parsing went wrong somewhere - it's likely the event has no location")
+                                        resolve(null);
                                     }
-                                }
+                                } 
                             });
                         });
                     });
                     try {
-                        let updatedResults = await Promise.all(promises);
+                        let updatedResults = (await Promise.all(promises)).filter(event => event !== null);
                         console.log("RESULT");
+                        console.log(updatedResults)
                         resolve(updatedResults);
                     } catch (apiError) {
-                        reject(apiError); 
+                        console.log("FAILED")
+                        console.log(apiError)
+                        reject(apiError);
                     }
                 } else {
+                    console.log("IT all worked!")
                     resolve(result);
                 }
             }
         });
     });
 }
+
+let haversineDistance = (lat1, lon1, lat2, lon2) => {
+    const toRadians = (degree) => degree * (Math.PI / 180);
+    const R = 6371; // Earth's radius in km
+
+    const dLat = toRadians(lat2 - lat1);
+    const dLon = toRadians(lon2 - lon1);
+    const a = Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+        Math.sin(dLon / 2) ** 2;
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distance in km
+};
 
 router.get('/list', redirectLogin, function (req, res, next) {
     let sqlquery = "SELECT events.*, users.username FROM events JOIN users ON events.organiserId = users.id" // query database to get all the books
@@ -111,7 +158,7 @@ router.get('/list', redirectLogin, function (req, res, next) {
                 result[i].attending = true;
             }
         }
-        console.log(result);
+        console.log(result.length + " - NUMBER OF EVENTS");
         res.render("list.ejs", { events: result, apiKey: apiKey, url: url, appCode: appCode })
     })
 })
@@ -212,7 +259,7 @@ router.get('/search', redirectLogin, function (req, res, next) {
     });
 })
 
-router.get('/search_result/:longitude/:latitude', redirectLogin, function (req, res, next) {
+router.get('/search_result', redirectLogin, function (req, res, next) {
     console.log(req.query.date);
     console.log(req.query);
     filters = {
@@ -220,7 +267,9 @@ router.get('/search_result/:longitude/:latitude', redirectLogin, function (req, 
         date: req.query.date,
         location: req.sanitize(req.query.location),
         distance: req.query.distance,
-        ticketCost: req.query.ticketCost
+        ticketCost: req.query.ticketCost,
+        latitude: req.query.latitude || null,
+        longitude: req.query.longitude || null
     }
     console.log(filters);
     for (var key in filters) {
@@ -232,7 +281,7 @@ router.get('/search_result/:longitude/:latitude', redirectLogin, function (req, 
     Promise.all([
         getEvents("search_result", filters)
     ]).then(([events]) => {
-        console.log(events);
+        //console.log(events);
         res.render("list.ejs", {
             apiKey: apiKey, url: url, appCode: appCode, events: events
         });
