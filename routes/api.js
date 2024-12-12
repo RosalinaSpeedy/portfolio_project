@@ -10,10 +10,10 @@ const redirectLogin = (req, res, next) => {
     }
 }
 
-router.get('/books', function (req, res, next) {
+router.get('/events', function (req, res, next) {
 
     // Query database to get all the books
-    let sqlquery = "SELECT * FROM books"
+    let sqlquery = "SELECT * FROM events"
     if (req.sanitize(req.query.search_term) !== undefined) {
         sqlquery += " WHERE name LIKE '%" + req.sanitize(req.query.search_term) + "%'";
     }
