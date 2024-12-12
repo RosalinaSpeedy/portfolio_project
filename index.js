@@ -62,13 +62,9 @@ app.use('/', mainRoutes)
 const usersRoutes = require('./routes/users')
 app.use('/users', usersRoutes)
 
-// Load the route handlers for /books
+// Load the route handlers for /events
 const eventsRoutes = require('./routes/events')
 app.use('/events', eventsRoutes)
-
-// Load the route handlers for /weather
-const weatherRoutes = require('./routes/weather')
-app.use('/weather', weatherRoutes)
 
 // Load the route handlers for /api
 const apiRoutes = require('./routes/api')
