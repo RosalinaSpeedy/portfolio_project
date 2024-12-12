@@ -18,158 +18,163 @@
 </head>
 
 <body>
-  <h1>
-    <%=siteData.siteName%>
-  </h1>
-  <h2>Events:</h2>
-  <ul class="eventList">
-    <% events.forEach(function(event) { %>
-      <li class="event">
-        <div class="eventCard">
-          <h1 class="eventTitle">
-            <%=event.name%>
-          </h1>
-          <p>Price: <%=event.fees%>
-          </p>
-          <p class="locationString">Location: <%=event.location%>
-          </p>
-          <p>Date: <%=event.date%>
-          </p>
-          <p>
-            <%= event.startTime + " - " + event.endTime%>
-          </p>
-          <p>
-            <%=event.description%>
-          </p>
-          <p>Organised by: <%=event.username%>
-          </p>
-          <% if (event.yourEvent) { %>
-            <p>This is your event!</p>
-            <a href="ammendbooking/<%=event.id%>" id="ammendBookingButton">Get more tickets</a>
-            <% } else if (event.attending) { %>
-              <a href="ammendbooking/<%=event.id%>" id="getTicketButton">Ammend your booking</a>
-              <% } else { %>
-                <a href="getticket/<%=event.id%>" id="getTicketButton">Get Ticket</a>
-              <% } %>
+  <%- include('navigationbar.ejs') %>
+    <div class="mainBody" id="listBody">
+      <%- include('sidebar.ejs') %>
+        <div class="eventListColumn">
+          <h2>Events:</h2>
+          <ul class="eventList">
+            <% events.forEach(function(event) { %>
+              <li class="event">
+                <div class="eventCard">
+                  <h1 class="eventTitle">
+                    <%=event.name%>
+                  </h1>
+                  <p>Price: <%=event.fees%>
+                  </p>
+                  <p class="locationString">Location: <%=event.location%>
+                  </p>
+                  <p>Date: <%=event.date%>
+                  </p>
+                  <p>
+                    <%= event.startTime + " - " + event.endTime%>
+                  </p>
+                  <p>
+                    <%=event.description%>
+                  </p>
+                  <p>Organised by: <%=event.username%>
+                  </p>
+                  <% if (event.yourEvent) { %>
+                    <p>This is your event!</p>
+                    <a href="ammendbooking/<%=event.id%>" id="ammendBookingButton">Get more tickets</a>
+                    <% } else if (event.attending) { %>
+                      <a href="ammendbooking/<%=event.id%>" id="getTicketButton">Ammend your booking</a>
+                      <% } else { %>
+                        <a href="getticket/<%=event.id%>" id="getTicketButton">Get Ticket</a>
+                        <% } %>
+                </div>
+              </li>
+              <% }) %>
+          </ul>
         </div>
-      </li>
-      <% }) %>
-  </ul>
-  <h1>filters</h1>
-  <div id="eventsData" style="display: none;">
-    <%- JSON.stringify(events) %>
-  </div>
-  <form id=filters action="search_result" method="GET">
-    <p>Seach by event/organiser name or description:</p>
-    <input id="search_box" type="text" name="search_text" value="">
-    <h1>Filters:</h1>
-    <p>date:<input type="date" id="date" name="date" value=""></p>
-    <p><input type="text" id="location" name="location" placeholder="Enter event address" value=""></p>
-    <p>distance:<select id="distance" name="distance">
-        <option value="5">5 miles</option>
-        <option value="10">10 miles</option>
-        <option value="25">25 miles</option>
-        <option value="50">50 miles</option>
-        <option value="na">N/A</option>
-      </select></p>
-    <p>
-      <input type="range" id="ticketCost" name="ticketCost" min="0" max="500" step="10" value="250"
-        oninput="updateCostValue(this.value)">
-    <p id="ticketCostValue">TIcket cost up to: £250</p>
-    </p>
-    <input type="submit" value="Search">
-  </form>
-  <div id="mapContainer2" style="width:50%; height:400px"></div>
-
+        <div id="eventsData" style="display: none;">
+          <%- JSON.stringify(events) %>
+        </div>
+        <div class="mapFilterWrapper">
+          <div class="mapFilterColumn">
+            <form id="filters" action="search_result" method="GET">
+              <p>Search by event/organiser name or description:</p>
+              <input id="search_box" type="text" name="search_text" value="">
+              <h1>Filters:</h1>
+              <p>date:<input type="date" id="date" name="date" value=""></p>
+              <p><input type="text" id="location" name="location" placeholder="Enter event address" value=""></p>
+              <p>distance:
+                <select id="distance" name="distance">
+                  <option value="5">5 miles</option>
+                  <option value="10">10 miles</option>
+                  <option value="25">25 miles</option>
+                  <option value="50">50 miles</option>
+                  <option value="na">N/A</option>
+                </select>
+              </p>
+              <p>
+                <input type="range" id="ticketCost" name="ticketCost" min="0" max="500" step="10" value="250"
+                  oninput="updateCostValue(this.value)">
+              <p id="ticketCostValue">Ticket cost up to: £250</p>
+              </p>
+            </form>
+          </div>
+          <div class="mapFilterColumn" id="mapContainer2"></div>
+        </div>
 </body>
-<script src="../list_static.js"> 
+<script src="../list_static.js">
 </script>
 <script>
-console.log("testing getting locations");
-const events = JSON.parse(document.getElementById('eventsData').innerText)
-console.log("locations got")
-var platform = new H.service.Platform({
+  console.log("testing getting locations");
+  const events = JSON.parse(document.getElementById('eventsData').innerText)
+  console.log("locations got")
+  var platform = new H.service.Platform({
     apikey: '<%=apiKey%>',
     appCode: '<%=appCode%>'
-});
-var defaultLayers = platform.createDefaultLayers();
+  });
+  var defaultLayers = platform.createDefaultLayers();
 
-var map = new H.Map(document.getElementById('mapContainer2'),
+  var map = new H.Map(document.getElementById('mapContainer2'),
     defaultLayers.vector.normal.map,
     {
-        center: { lat: 51.5072, lng: 0.1276 }, // london
-        zoom: 4,
-        pixelRatio: window.devicePixelRatio || 1
+      center: { lat: 51.5072, lng: 0.1276 }, // london
+      zoom: 4,
+      pixelRatio: window.devicePixelRatio || 1
     }
-);
-window.addEventListener('resize', () => map.getViewPort().resize());
-var behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
+  );
+  window.addEventListener('resize', () => map.getViewPort().resize());
+  var behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
 
-var ui = H.ui.UI.createDefault(map, defaultLayers);
-map.setZoom(8)
-let userLocation = { latitude: null, longitude: null };
+  var ui = H.ui.UI.createDefault(map, defaultLayers);
+  map.setZoom(8)
+  let userLocation = { latitude: null, longitude: null };
 
-$(document).ready(function () {
+  $(document).ready(function () {
     // v1 submit the form every time the data change
     $('#filters').find('input, select, range').on('change', updateListData);
     function updateListData() {
-        console.log("changed form")
-        if (!userLocation.latitude || !userLocation.longitude) {
-            console.error("User location is not available yet.");
-            return;
-        }
-        const formData = $('#filters').serializeArray();
-        formData.push(
-            { name: "latitude", value: userLocation.latitude },
-            { name: "longitude", value: userLocation.longitude }
-        );
-        $.ajax({
-            type: "GET",
-            url: `./search_result`,
-            data: formData,
-            success: function (response) {
-                console.log("succeeded")
-                var tempDiv = $('<div>').html(response);
-                var newList = tempDiv.find('.eventList');
-                var newLocations = tempDiv.find("#eventsData");
-                $('.eventList').html(newList.html());
-                $('.eventList').removeClass('newDataLoadedEffect');
-                void $('.eventList')[0].offsetWidth;
-                $('.eventList').addClass('newDataLoadedEffect');
-                $("#eventsData").html(newLocations.html());
-                $("#eventsData").removeClass('newDataLoadedEffect');
-                void $("#eventsData")[0].offsetWidth;
-                setPrettyLocations();
-                $("#eventsData").addClass('newDataLoadedEffect');
-                // Clear markers from map
-                map.getObjects().forEach(object => {
-                    if (object instanceof H.map.Group) {
-                        console.log("removing marker");
-                        map.removeObject(object);
-                    }
-                });
-                let events = JSON.parse(tempDiv.find('#eventsData').text());
-                let markerGroup = new H.map.Group();
-                events.forEach(event => {
-                    console.log("event found");
-                    console.log(event);
-                    if (event.latitude && event.longitude) {
-                        console.log("adding marker");
-                        let markerLocation = { lat: event.latitude, lng: event.longitude };
-                        let pngIcon = new H.map.Icon('../marker.webp', { size: { w: 36, h: 36 } });
-                        let marker = new H.map.Marker(markerLocation, { icon: pngIcon });
-                        console.log(marker)
-                        // Add marker to the map
-                        markerGroup.addObject(marker);
-                    } else {
-                        console.log("Invalid latitude and longitude");
-                    }
-                });
-                map.addObject(markerGroup);
+      console.log("changed form")
+      if (!userLocation.latitude || !userLocation.longitude) {
+        console.error("User location is not available yet.");
+        return;
+      }
+      const formData = $('#filters').serializeArray();
+      formData.push(
+        { name: "latitude", value: userLocation.latitude },
+        { name: "longitude", value: userLocation.longitude }
+      );
+      $.ajax({
+        type: "GET",
+        url: `./search_result`,
+        data: formData,
+        success: function (response) {
+          console.log("succeeded")
+          var tempDiv = $('<div>').html(response);
+          var newList = tempDiv.find('.eventList');
+          var newLocations = tempDiv.find("#eventsData");
+          $('.eventList').html(newList.html());
+          $('.eventList').removeClass('newDataLoadedEffect');
+          void $('.eventList')[0].offsetWidth;
+          $('.eventList').addClass('newDataLoadedEffect');
+          $("#eventsData").html(newLocations.html());
+          $("#eventsData").removeClass('newDataLoadedEffect');
+          void $("#eventsData")[0].offsetWidth;
+          $("#eventsData").addClass('newDataLoadedEffect');
+          setPrettyLocations();
+          // Clear markers from map
+          map.getObjects().forEach(object => {
+            if (object instanceof H.map.Group) {
+              console.log("removing marker");
+              map.removeObject(object);
             }
-        });
+          });
+          let events = JSON.parse(tempDiv.find('#eventsData').text());
+          let markerGroup = new H.map.Group();
+          events.forEach(event => {
+            console.log("event found");
+            console.log(event);
+            if (event.latitude && event.longitude) {
+              console.log("adding marker");
+              let markerLocation = { lat: event.latitude, lng: event.longitude };
+              let pngIcon = new H.map.Icon('../marker.webp', { size: { w: 36, h: 36 } });
+              let marker = new H.map.Marker(markerLocation, { icon: pngIcon });
+              console.log(marker)
+              // Add marker to the map
+              markerGroup.addObject(marker);
+            } else {
+              console.log("Invalid latitude and longitude");
+            }
+          });
+          map.addObject(markerGroup);
+        }
+      });
     }
-})
+  })
 </script>
 
 </html>

@@ -1,32 +1,43 @@
 <!doctype html>
 <html>
-  <head>
-    <title>Add book to <%=siteData.siteName%></title>
-    <link rel="stylesheet"  type="text/css" href="/main.css" />
-  </head>
-  <body>
-    <h1><%=siteData.siteName%>: Schedule a new event</h1>
-    <!-- (id INT AUTO_INCREMENT,name VARCHAR(50),fees DECIMAL(5, 2) unsigned, location VARCHAR(50), date DATE, createdAt DATE, updatedAt DATE, startTime TIME, duration INT, status VARCHAR(50), description VARCHAR(100), organiserId INT, FOREIGN KEY (organiserId) REFERENCES users(id), PRIMARY KEY(id)); -->
-    <form method="POST" action="eventadded">
-        <p>Event name: <input id="name" type="text" name="name" value="" required/></p>
-        <p>Ticket price: <input id="fees" type="text" name="fees" value="" required/></p>
-        <!-- country, state, county, city, district, street, houseNumber, and postalCode -->
-        <p>Location address:</p>
-        <p>Country: <input id="country" type="text" name="country" value="" required /></p>
-        <p>State (optional): <input id="state" type="text" name="state" value="" /></p>
-        <p>County (optional): <input id="county" type="text" name="county" value="" /></p>
-        <p>City: <input id="city" type="text" name="city" value="" required/></p>
-        <p>District (optional): <input id="district" type="text" name="district" value=""/></p>
-        <p>Street: <input id="street" type="text" name="street" value="" required/></p>
-        <p>House number: <input id="houseNumber" type="text" name="houseNumber" value="" required/></p>
-        <p>Post code: <input id="postcode" type="text" name="postcode" value="" required/></p>
-        <p>Ticket information</p>
-        <p>Date: <input id="date" type="date" name="date" value="" /></p>
-        <p>Start time: <input id="startTime" type="time" name="startTime" value="" /></p>
-        <p>End time: <input id="endTime" type="time" name="endTime" value="" /></p>
-        <p>Description: <input id="description" type="text" name="description" value="" /></p>
-        <input type="submit" value="Schedule event" />
-      </form>
-  </body>
-</html>
 
+<head>
+  <title>Add book to <%=siteData.siteName%>
+  </title>
+  <link rel="stylesheet" type="text/css" href="/main.css" />
+</head>
+
+<body>
+  <%- include('navigationbar.ejs') %>
+    <div class="mainBody">
+      <%- include('sidebar.ejs') %>
+        <div>
+          <h1>
+            Schedule a new event
+          </h1>
+          <!-- (id INT AUTO_INCREMENT,name VARCHAR(50),fees DECIMAL(5, 2) unsigned, location VARCHAR(50), date DATE, createdAt DATE, updatedAt DATE, startTime TIME, duration INT, status VARCHAR(50), description VARCHAR(100), organiserId INT, FOREIGN KEY (organiserId) REFERENCES users(id), PRIMARY KEY(id)); -->
+          <form method="POST" action="eventadded">
+            <p>Event name: <input id="name" type="text" name="name" value="" required /></p>
+            <p>Ticket price: <input id="fees" type="text" name="fees" value="" required /></p>
+            <!-- country, state, county, city, district, street, houseNumber, and postalCode -->
+            <p>Location address:</p>
+            <p>Country: <input id="country" type="text" name="country" value="" required /></p>
+            <p>State (optional): <input id="state" type="text" name="state" value="" /></p>
+            <p>County (optional): <input id="county" type="text" name="county" value="" /></p>
+            <p>City: <input id="city" type="text" name="city" value="" required /></p>
+            <p>District (optional): <input id="district" type="text" name="district" value="" /></p>
+            <p>Street: <input id="street" type="text" name="street" value="" required /></p>
+            <p>House number: <input id="houseNumber" type="text" name="houseNumber" value="" required /></p>
+            <p>Post code: <input id="postcode" type="text" name="postcode" value="" required /></p>
+            <p>Ticket information</p>
+            <p>Date: <input id="date" type="date" name="date" value="" /></p>
+            <p>Start time: <input id="startTime" type="time" name="startTime" value="" /></p>
+            <p>End time: <input id="endTime" type="time" name="endTime" value="" /></p>
+            <p>Description: <input id="description" type="text" name="description" value="" /></p>
+            <input type="submit" value="Schedule event" />
+          </form>
+        </div>
+    </div>
+</body>
+
+</html>

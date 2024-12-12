@@ -6,32 +6,38 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
   </head>
   <body>
-    <h1><%=siteData.siteName%></h1>
-    <h2>Ammend your tickets:</h2>
-    <div class="eventCard">
-        <h1 class="eventTitle"><%=event.name%></h1>
-        <p>Price: <%=event.fees%></p>
-        <p class="locationString">Location: <%=event.location%></p>
-        <p>Date: <%=event.date%></p>
-        <p><%= event.startTime + " - " + event.endTime%></p>
-        <p><%=event.description%></p>
-        <p>Organised by: <%=event.username%></p>
-        <p><%=event.id%></p>
-        <form action="../eventbooked/<%=event.id%>" method="POST">
-            <p>
-            <input type="range" id="attendees" name="attendees" min="<%=event.ticketQuantity%>" max="50" step="1" value="<%event.ticketNo%>"
-                oninput="updateAttendees(this.value)">
-            <p id="attendeesLabel">Number of tickets: <%=event.ticketQuantity%></p>
-            </p>
-            <input type="submit" value="Update tickets">
-        </form>
+    <%- include('navigationbar.ejs') %>
+    <div class="mainBody">
+      <%- include('sidebar.ejs') %>
+      <div>
+        <h1><%=siteData.siteName%></h1>
+        <h2>Ammend your tickets:</h2>
+        <div class="eventCard">
+            <h1 class="eventTitle"><%=event.name%></h1>
+            <p>Price: <%=event.fees%></p>
+            <p class="locationString">Location: <%=event.location%></p>
+            <p>Date: <%=event.date%></p>
+            <p><%= event.startTime + " - " + event.endTime%></p>
+            <p><%=event.description%></p>
+            <p>Organised by: <%=event.username%></p>
+            <p><%=event.id%></p>
+            <form action="../eventbooked/<%=event.id%>" method="POST">
+                <p>
+                <input type="range" id="attendees" name="attendees" min="<%=event.ticketQuantity%>" max="50" step="1" value="<%event.ticketNo%>"
+                    oninput="updateAttendees(this.value)">
+                <p id="attendeesLabel">Number of tickets: <%=event.ticketQuantity%></p>
+                </p>
+                <input type="submit" value="Update tickets">
+            </form>
+          </div>
+      </div>
     </div>
   </body>
   <script src="/list_static.js"> 
   </script>
   <script>
     function updateAttendees(val) {
-      document.getElementById('attendeesLabel').innerText = 'Number of tickets' + val;
+      document.getElementById('attendeesLabel').innerText = 'Number of tickets ' + val;
     }
   </script>
 </html>

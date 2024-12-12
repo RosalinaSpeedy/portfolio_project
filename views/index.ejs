@@ -1,36 +1,23 @@
 <!doctype html>
 <html>
-  <head>
-    <title>Welcome to <%=siteData.siteName%></title>
-    <link rel="stylesheet"  type="text/css" href="/main.css" />
-  </head>
-  <body>
-    <header id="topBar">
-      <img class="logo" src="/Abdul-Jinadu.jpg" height="90px" width="280px">
-      <h1 id="mainTitle"><%=siteData.siteName%></h1>
-      <div class="vertical">
-        <img class="profilePic" src="/Abdul-Jinadu.jpg" height="65px" width="65px">
-        <div class="profilePane">
-          <% if (user.isLoggedIn) { %>
-            <a href="users/logout">Log Out</a>
-            <a href="users/myevents/<%=user.userId%>">My events</a>
-          <% } else { %>
-            <a href="users/login">Log In</a>
-          <% } %>
-        </div>
-      </div>
-    </header>
+
+<head>
+  <title>Welcome to <%=siteData.siteName%>
+  </title>
+  <link rel="stylesheet" type="text/css" href="/main.css" />
+</head>
+
+<body>
+  <%- include('navigationbar.ejs') %>
     <div class="mainBody">
-      <div id="sideNav">
-        <a href="/">Home</a>
-        <a href="/about">About</a>
-        <a href="/events/list">Events</a>
-      </div>
-      <div class="indexMainBody">
-        <h1>Welcome to <%=siteData.siteName%></h1>
-        <p><a href="events/search">Search for events</a></p>
-        <p><a href="events/addevent">Schedule a new event</a></p>
-      </div>
+      <%- include('sidebar.ejs') %>
+        <div class="indexMainBody">
+          <h1>Welcome to <%=siteData.siteName%>
+          </h1>
+          <p><a href="events/search">Search for events</a></p>
+          <p><a href="events/addevent">Schedule a new event</a></p>
+        </div>
     </div>
-  </body>
+</body>
+
 </html>
