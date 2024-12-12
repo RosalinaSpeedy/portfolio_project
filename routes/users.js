@@ -110,12 +110,14 @@ router.get('/myevents/:id', redirectLogin, (req, res, next) => {
             if (err) {
                 next(err)
             }
-            let organiserQuery = `SELECT * FROM events WHERE organiserId = ${userId}`
+            let organiserQuery = `SELECT events.*,
+                                  ADDTIME(events.startTime, SEC_TO_TIME(events.duration * 60)) AS endTime
+                                  FROM events WHERE organiserId = ${userId}`
             db.query(organiserQuery, (err, result1) => {
                 if (err) {
                     next(err)
                 }
-                res.render("myevents.ejs", { events: result, bookings: result1 })
+                res.render("myevents.ejs", { events: result1, bookings: result })
             })
         })
     } catch {

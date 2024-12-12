@@ -17,17 +17,6 @@ let apiKey = 'tCNGoZKIq4A6VjAmsFcEiXb1u4a56MFNrsUzfEIa3fY'
 let url = `https://js.api.here.com/v3/3.1/`
 let appCode = 'MJlbBVYv5uTduZ53sy4N'
 
-function calculateEndtime(result) {
-    let startingTime = new Date();
-    let [startHours, startMinutes, startSeconds] = result.startTime.split(':').map(Number);
-    startingTime.setHours(startHours, startMinutes, startSeconds);
-    endingTime = new Date();
-    endingTime.setHours(startHours, startMinutes, startSeconds);
-    endingTime.setMinutes(startingTime.getMinutes() + result.duration);
-    endingTime = endingTime.toTimeString().split(' ')[0];
-    return endingTime;
-}
-
 function getEvents(pageName, filters) {
     return new Promise((resolve, reject) => {
         var query = `SELECT events.*, users.username, ADDTIME(events.startTime, SEC_TO_TIME(events.duration * 60)) AS endTime FROM events 
@@ -65,7 +54,6 @@ function getEvents(pageName, filters) {
                     const distanceLimit = parseInt(filters.distance);
                     console.log("Found distance limit: " + distanceLimit)
                     let promises = result.map(event => {
-                        //event.endTime = calculateEndtime(event);
                         let tempApiUrl = `https://geocode.search.hereapi.com/v1/geocode?q=${event.location}&units=metric&appcode=${appCode}&apikey=${apiKey}`;
                         return new Promise((resolve, reject) => {
                             request(tempApiUrl, function (err, response, body) {
@@ -160,9 +148,7 @@ router.get('/list', redirectLogin, function (req, res, next) {
         if (err) {
             return next(err);
         }
-        // for (let i = 0; i < result.length; i++) {
-        //     result[i].endTime = calculateEndtime(result[i]);
-        // }
+        console.log(result);
         res.render("list.ejs", { events: result, apiKey: apiKey, url: url, appCode: appCode });
     });
 })

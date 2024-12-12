@@ -104,7 +104,7 @@
     if (eventStringified.latitude && eventStringified.longitude) {
         console.log("adding marker");
         let markerLocation = { lat: eventStringified.latitude, lng: eventStringified.longitude };
-        let pngIcon = new H.map.Icon('/abdulMarker.jpeg', { size: { w: 36, h: 36 } });
+        let pngIcon = new H.map.Icon('../marker.webp', { size: { w: 36, h: 36 } });
         let marker = new H.map.Marker(markerLocation, { icon: pngIcon });
         console.log(marker)
         // Add marker to the map

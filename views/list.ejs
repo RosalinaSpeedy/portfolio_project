@@ -31,7 +31,7 @@
           </h1>
           <p>Price: <%=event.fees%>
           </p>
-          <p>Location: <%=event.location%>
+          <p class="locationString">Location: <%=event.location%>
           </p>
           <p>Date: <%=event.date%>
           </p>
@@ -88,6 +88,32 @@
   console.log("locations got")
 </script>
 <script>
+  function prettyLocation(location) {
+    let empty = "";
+    let splitLocation = location.split(';');
+    console.log(splitLocation)
+    if (splitLocation.length > 1) {
+      empty += "Location: "
+    }
+    for (let i = 0; i < splitLocation.length; i++) {
+      let tmpWord = splitLocation[i].split("=");
+      console.log(tmpWord[tmpWord.length - 1]);
+      if (tmpWord[tmpWord.length - 1] !== '') {
+        empty += tmpWord[tmpWord.length - 1];
+        empty += ", ";
+      }
+    }
+    return empty;
+  }
+  function setPrettyLocations() {
+    let locations = document.getElementsByClassName("locationString")
+    for (let i = 0; i < locations.length; i++) {
+      locations[i].innerText = prettyLocation(locations[i].innerText)
+    }
+  }
+
+  setPrettyLocations();
+  
   //Step 1: initialize communication with the platform
   // Replace variable YOUR_API_KEY with your own apikey
   var platform = new H.service.Platform({
@@ -164,6 +190,7 @@
           $("#eventsData").html(newLocations.html());
           $("#eventsData").removeClass('newDataLoadedEffect');
           void $("#eventsData")[0].offsetWidth;
+          setPrettyLocations();
           $("#eventsData").addClass('newDataLoadedEffect');
           // Clear existing markers
           map.getObjects().forEach(object => {
@@ -183,7 +210,7 @@
               if (event.latitude && event.longitude) {
                   console.log("adding marker");
                   let markerLocation = { lat: event.latitude, lng: event.longitude };
-                  let pngIcon = new H.map.Icon('/marker.webp', { size: { w: 36, h: 36 } });
+                  let pngIcon = new H.map.Icon('../marker.webp', { size: { w: 36, h: 36 } });
                   let marker = new H.map.Marker(markerLocation, { icon: pngIcon });
                   console.log(marker)
                   // Add marker to the map
