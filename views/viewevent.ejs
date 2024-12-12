@@ -1,0 +1,117 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Welcome to <%=siteData.siteName%>
+    </title>
+    <link rel="stylesheet" type="text/css" href="/main.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <!-- HERE JavaScript Libs & Style Sheets-->
+    <link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css" />
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-core.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-service.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-ui.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"></script>
+</head>
+
+<body>
+    <h1>
+        <%=siteData.siteName%>
+    </h1>
+    <h2>Event details:</h2>
+    <h1 class="eventTitle">
+        <%=event.name%>
+    </h1>
+    <p>Price: <%=event.fees%>
+    </p>
+    <p>Location: <%=event.location%>
+    </p>
+    <p>Date: <%=event.date%>
+    </p>
+    <p>
+        <%= event.startTime + " - " + event.endTime%>
+    </p>
+    <p>
+        <%=event.description%>
+    </p>
+    <p>Organised by: <%=event.username%>
+    </p>
+    <% if (event.yourEvent || event.userAttending) { %>
+        <p>This is your event!</p>
+        <a href="ammendbooking/<%=event.id%>" id="ammendBookingButton">Get more tickets</a>
+        <% } else { %>
+            <a href="getticket/<%=event.id%>" id="getTicketButton">Get Ticket</a>
+            <% } %>
+                <div id="eventsData" style="display: none;">
+                    <%- JSON.stringify(event) %>
+                </div>
+                <div id="mapContainer2" style="width:50%; height:400px"></div>
+
+</body>
+<script>
+    console.log("testing getting locations");
+    console.log(event)
+    const eventStringified = JSON.parse(document.getElementById('eventsData').innerText);
+    console.log("locations got")
+    console.log(eventStringified)
+</script>
+<script>
+    //Step 1: initialize communication with the platform
+    // Replace variable YOUR_API_KEY with your own apikey
+    var platform = new H.service.Platform({
+        apikey: '<%=apiKey%>',
+        appCode: '<%=appCode%>'
+    });
+    var defaultLayers = platform.createDefaultLayers();
+    //Step 2: initialize a map - this map is centered over Europe
+    var map = new H.Map(document.getElementById('mapContainer2'),
+        defaultLayers.vector.normal.map,
+        {
+            center: { lat: 51.5072, lng: 0.1276 },
+            zoom: 4,
+            pixelRatio: window.devicePixelRatio || 1
+        }
+    );
+    // add a resize listener to make sure that the map occupies the whole container
+    window.addEventListener('resize', () => map.getViewPort().resize());
+    //Step 3: make the map interactive
+    // MapEvents enables the event system
+    // Behavior implements default interactions for pan/zoom (also on mobile touch environments)
+    var behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
+
+    // Create the default UI components
+    var ui = H.ui.UI.createDefault(map, defaultLayers);
+
+    //Zooming so that the marker can be clearly visible
+    map.setZoom(8)
+    let userLocation = { latitude: null, longitude: null };
+
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+                userLocation.latitude = position.coords.latitude;
+                userLocation.longitude = position.coords.longitude;
+            });
+        } else {
+            console.log("Geolocation is not supported by this browser.");
+        }
+    }
+    getLocation();
+
+    if (eventStringified.latitude && eventStringified.longitude) {
+        console.log("adding marker");
+        let markerLocation = { lat: eventStringified.latitude, lng: eventStringified.longitude };
+        let pngIcon = new H.map.Icon('/abdulMarker.jpeg', { size: { w: 36, h: 36 } });
+        let marker = new H.map.Marker(markerLocation, { icon: pngIcon });
+        console.log(marker)
+        // Add marker to the map
+        map.addObject(marker);
+    } else {
+        console.log("Invalid latitude and longitude");
+    }
+</script>
+
+</html>

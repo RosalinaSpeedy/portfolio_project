@@ -97,7 +97,7 @@ function getEvents(pageName, filters) {
                                             } else {
                                                 console.log("Outside the limit: " + distance)
                                                 resolve(null); // Exclude events outside the range
-                                            } 
+                                            }
                                         } else {
                                             resolve(null);
                                         }
@@ -105,7 +105,7 @@ function getEvents(pageName, filters) {
                                         console.log("parsing went wrong somewhere - it's likely the event has no location")
                                         resolve(null);
                                     }
-                                } 
+                                }
                             });
                         });
                     });
@@ -391,6 +391,56 @@ router.get('/maps', function (req, res, next) {
         }
     });
 })
+
+router.get("/viewevent/:id", redirectLogin, (req, res) => {
+    try {
+        const eventId = req.params.id;
+        let sqlquery = `SELECT events.*, users.username FROM events JOIN users ON events.organiserId = users.id WHERE events.id=${eventId}`;
+        db.query(sqlquery, (err, result) => {
+            if (err) {
+                next(err)
+            }
+            for (let i = 0; i < result.length; i++) {
+                result[i].endTime = calculateEndtime(result[i]);
+            }
+            console.log(result[0]);
+            let tempApiUrl = `https://geocode.search.hereapi.com/v1/geocode?q=${result[0].location}&units=metric&appcode=${appCode}&apikey=${apiKey}`;
+            request(tempApiUrl, function (err, response, body) {
+                if (err) {
+                    console.log(err);
+                    reject(err);
+                    return;
+                } else {
+                    try {
+                        console.log(body)
+                        let loc = JSON.parse(body);
+                        if (loc.items[loc.items.length - 1].position !== undefined) {
+                            console.log(loc.items[loc.items.length - 1])
+                            console.log(loc.items[loc.items.length - 1].position);
+                            const eventCoords = loc.items[loc.items.length - 1].position;
+                            result[0].longitude = eventCoords.lng;
+                            result[0].latitude = eventCoords.lat;
+                            console.log(result[0])
+                            res.render("viewevent.ejs", { event: result[0], apiKey: apiKey, url: url, appCode: appCode })
+                        } else {
+                            console.log("error in the API request step")
+                            result[0].longitude = null;
+                            result[0].latitude = null;
+                            res.render("viewevent.ejs", { event: result[0], apiKey: apiKey, url: url, appCode: appCode })
+                        }
+                    } catch {
+                        console.log("That's an error; not sure which one")
+                        result[0].longitude = null;
+                        result[0].latitude = null;
+                        res.render("viewevent.ejs", { event: result[0], apiKey: apiKey, url: url, appCode: appCode })
+                    }
+                }
+            })
+        })
+    } catch {
+        res.send("Something done gone wrong");
+    }
+});
 
 // Export the router object so index.js can access it
 module.exports = router
