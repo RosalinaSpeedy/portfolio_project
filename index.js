@@ -19,7 +19,7 @@ app.set('view engine', 'ejs')
 // Set up the body parser 
 app.use(express.urlencoded({ extended: true }))
 
-// Set up public folder (for css and statis js)
+// Set up public folder (for css and static js)
 app.use(express.static(__dirname + '/public'))
 
 // Create an input sanitizer
