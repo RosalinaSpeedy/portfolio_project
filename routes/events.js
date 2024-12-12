@@ -15,10 +15,7 @@ const router = express.Router()
 
 let apiKey = 'tCNGoZKIq4A6VjAmsFcEiXb1u4a56MFNrsUzfEIa3fY'
 let url = `https://js.api.here.com/v3/3.1/`
-let location = "city=Berlin;country=Germany;street=Friedrichstr;houseNumber=20"
-//let location = req.sanitize(req.body.location);
 let appCode = 'MJlbBVYv5uTduZ53sy4N'
-let apiUrl = `https://geocode.search.hereapi.com/v1/geocode?q=${location}&units=metric&appcode=${appCode}&apikey=${apiKey}`
 
 function calculateEndtime(result) {
     let startingTime = new Date();
@@ -33,7 +30,7 @@ function calculateEndtime(result) {
 
 function getEvents(pageName, filters) {
     return new Promise((resolve, reject) => {
-        var query = `SELECT events.*, users.username FROM events 
+        var query = `SELECT events.*, users.username, ADDTIME(events.startTime, SEC_TO_TIME(events.duration * 60)) AS endTime FROM events 
             JOIN users ON events.organiserId = users.id WHERE 1=1 `;
         console.log(filters);
 
@@ -68,7 +65,7 @@ function getEvents(pageName, filters) {
                     const distanceLimit = parseInt(filters.distance);
                     console.log("Found distance limit: " + distanceLimit)
                     let promises = result.map(event => {
-                        event.endTime = calculateEndtime(event);
+                        //event.endTime = calculateEndtime(event);
                         let tempApiUrl = `https://geocode.search.hereapi.com/v1/geocode?q=${event.location}&units=metric&appcode=${appCode}&apikey=${apiKey}`;
                         return new Promise((resolve, reject) => {
                             request(tempApiUrl, function (err, response, body) {
@@ -143,24 +140,31 @@ let haversineDistance = (lat1, lon1, lat2, lon2) => {
 };
 
 router.get('/list', redirectLogin, function (req, res, next) {
-    let sqlquery = "SELECT events.*, users.username FROM events JOIN users ON events.organiserId = users.id" // query database to get all the books
+    let sqlquery = `SELECT events.*, users.username, 
+                    CASE 
+                    WHEN attendees.userId IS NOT NULL THEN TRUE 
+                    ELSE FALSE 
+                    END AS attending,
+                    CASE WHEN events.organiserId = ${req.session.databaseId} THEN TRUE 
+                    ELSE FALSE 
+                    END AS yourEvent,
+                    ADDTIME(events.startTime, SEC_TO_TIME(events.duration * 60)) AS endTime
+                    FROM events
+                    JOIN users 
+                    ON events.organiserId = users.id
+                    LEFT JOIN attendees 
+                    ON events.id = attendees.eventId 
+                    AND attendees.userId = ${req.session.databaseId}`;
     // execute sql query
     db.query(sqlquery, (err, result) => {
         if (err) {
-            next(err)
+            return next(err);
         }
-        for (let i = 0; i < result.length; i++) {
-            result[i].endTime = calculateEndtime(result[i]);
-            result[i].yourEvent = false;
-            result[i].attending = false;
-            if (result[i].organiserId == req.session.databaseId) {
-                result[i].yourEvent = true;
-                result[i].attending = true;
-            }
-        }
-        console.log(result.length + " - NUMBER OF EVENTS");
-        res.render("list.ejs", { events: result, apiKey: apiKey, url: url, appCode: appCode })
-    })
+        // for (let i = 0; i < result.length; i++) {
+        //     result[i].endTime = calculateEndtime(result[i]);
+        // }
+        res.render("list.ejs", { events: result, apiKey: apiKey, url: url, appCode: appCode });
+    });
 })
 
 router.get('/addevent', redirectLogin, function (req, res, next) {
@@ -246,17 +250,7 @@ router.post('/eventadded', redirectLogin, [
 })
 
 router.get('/search', redirectLogin, function (req, res, next) {
-    console.log(apiUrl)
-    request(apiUrl, function (err, response, body) {
-        if (err) {
-            next(err)
-        } else {
-            let loc = JSON.parse(body)
-            let firstRes = loc.items[0]
-            //res.send(loc.items[0])
-            res.render("search.ejs", { apiKey: apiKey, url: url, appCode: appCode, loc: firstRes })
-        }
-    });
+    res.render("search.ejs")
 })
 
 router.get('/search_result', redirectLogin, function (req, res, next) {
@@ -281,7 +275,6 @@ router.get('/search_result', redirectLogin, function (req, res, next) {
     Promise.all([
         getEvents("search_result", filters)
     ]).then(([events]) => {
-        //console.log(events);
         res.render("list.ejs", {
             apiKey: apiKey, url: url, appCode: appCode, events: events
         });
@@ -295,15 +288,11 @@ router.get('/search_result', redirectLogin, function (req, res, next) {
 router.get("/getticket/:id", redirectLogin, (req, res) => {
     try {
         const eventId = req.params.id;
-        let sqlquery = `SELECT events.*, users.username FROM events JOIN users ON events.organiserId = users.id WHERE events.id=${eventId}`;
+        let sqlquery = `SELECT events.*, users.username, ADDTIME(events.startTime, SEC_TO_TIME(events.duration * 60)) AS endTime FROM events JOIN users ON events.organiserId = users.id WHERE events.id=${eventId}`;
         db.query(sqlquery, (err, result) => {
             if (err) {
                 next(err)
             }
-            for (let i = 0; i < result.length; i++) {
-                result[i].endTime = calculateEndtime(result[i]);
-            }
-            //console.log(result);
             res.render("getticket.ejs", { event: result[0] })
         })
     } catch {
@@ -314,11 +303,11 @@ router.get("/getticket/:id", redirectLogin, (req, res) => {
 router.get("/ammendbooking/:id", redirectLogin, (req, res) => {
     try {
         const eventId = req.params.id;
-        //let sqlquery = `SELECT events.*, users.username FROM events JOIN users ON events.organiserId = users.id WHERE events.id=${eventId}`;
         let sqlquery = `SELECT 
                         events.*, 
                         users.username, 
-                        attendees.ticketQuantity
+                        attendees.ticketQuantity,
+                        ADDTIME(events.startTime, SEC_TO_TIME(events.duration * 60)) AS endTime
                         FROM 
                             events
                         JOIN 
@@ -333,10 +322,6 @@ router.get("/ammendbooking/:id", redirectLogin, (req, res) => {
             if (err) {
                 next(err)
             }
-            for (let i = 0; i < result.length; i++) {
-                result[i].endTime = calculateEndtime(result[i]);
-            }
-            //console.log(result);
             res.render("ammendbooking.ejs", { event: result[0] })
         })
     } catch {
@@ -347,7 +332,14 @@ router.get("/ammendbooking/:id", redirectLogin, (req, res) => {
 router.post("/eventbooked/:id", redirectLogin, (req, res) => {
     try {
         const eventId = req.params.id;
-        let sqlquery = `SELECT events.*, users.username, users.email FROM events JOIN users ON events.organiserId = users.id WHERE events.id=${eventId}`;
+        let sqlquery = `SELECT 
+                        events.*, 
+                        users.username, 
+                        ADDTIME(events.startTime, SEC_TO_TIME(events.duration * 60)) AS endTime,
+                        (SELECT email FROM users WHERE id = ${req.session.databaseId}) AS email 
+                        FROM events 
+                        JOIN users ON events.organiserId = users.id 
+                        WHERE events.id = ${eventId};`;
         let insertquery = `INSERT INTO attendees (eventId, userId, ticketQuantity)
                            VALUES (?, ?, ?)
                            ON DUPLICATE KEY UPDATE 
@@ -356,7 +348,6 @@ router.post("/eventbooked/:id", redirectLogin, (req, res) => {
             if (err) {
                 next(err)
             }
-            result[0].endTime = calculateEndtime(result[0]);
             insertParams = [result[0].id, req.session.databaseId, req.body.attendees];
             db.query(insertquery, insertParams, (err, result1) => {
                 if (err) {
@@ -365,43 +356,19 @@ router.post("/eventbooked/:id", redirectLogin, (req, res) => {
                 result.ticketNo = req.body.attendees;
                 res.render("eventbooked.ejs", { event: result[0] })
             })
-            //console.log(result);
         })
     } catch {
         res.send("Error");
     }
 });
 
-router.get('/maps', function (req, res, next) {
-    let apiKey = 'tCNGoZKIq4A6VjAmsFcEiXb1u4a56MFNrsUzfEIa3fY'
-    let url = `https://js.api.here.com/v3/3.1/`
-    let location = "city=Berlin;country=Germany;street=Friedrichstr;houseNumber=20"
-    //let location = req.sanitize(req.body.location);
-    let appCode = 'MJlbBVYv5uTduZ53sy4N'
-    let apiUrl = `https://geocode.search.hereapi.com/v1/geocode?q=${location}&units=metric&appcode=${appCode}&apikey=${apiKey}`
-    console.log(apiUrl)
-    request(apiUrl, function (err, response, body) {
-        if (err) {
-            next(err)
-        } else {
-            let loc = JSON.parse(body)
-            let firstRes = loc.items[0]
-            //res.send(loc.items[0])
-            res.render("maps.ejs", { apiKey: apiKey, url: url, appCode: appCode, loc: firstRes })
-        }
-    });
-})
-
 router.get("/viewevent/:id", redirectLogin, (req, res) => {
     try {
         const eventId = req.params.id;
-        let sqlquery = `SELECT events.*, users.username FROM events JOIN users ON events.organiserId = users.id WHERE events.id=${eventId}`;
+        let sqlquery = `SELECT events.*, users.username, ADDTIME(events.startTime, SEC_TO_TIME(events.duration * 60)) AS endTime FROM events JOIN users ON events.organiserId = users.id WHERE events.id=${eventId}`;
         db.query(sqlquery, (err, result) => {
             if (err) {
                 next(err)
-            }
-            for (let i = 0; i < result.length; i++) {
-                result[i].endTime = calculateEndtime(result[i]);
             }
             console.log(result[0]);
             let tempApiUrl = `https://geocode.search.hereapi.com/v1/geocode?q=${result[0].location}&units=metric&appcode=${appCode}&apikey=${apiKey}`;
@@ -442,5 +409,4 @@ router.get("/viewevent/:id", redirectLogin, (req, res) => {
     }
 });
 
-// Export the router object so index.js can access it
 module.exports = router

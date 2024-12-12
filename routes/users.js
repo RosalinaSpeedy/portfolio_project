@@ -8,7 +8,7 @@ const bcrypt = require('bcrypt')
 
 const redirectLogin = (req, res, next) => {
     if (!req.session.userId) {
-        res.redirect('./login') // redirect to the login page
+        res.redirect('../../users/login') // redirect to the login page
     } else {
         next(); // move to the next middleware function
     }
@@ -38,26 +38,12 @@ router.post('/registered', [check('email').isEmail(), check('password').isLength
                     next(err)
                 }
                 else {
-                    var result = 'Hello ' + req.sanitize(req.body.first) + ' ' + req.sanitize(req.body.last) + ' you are now registered!  We will send an email to you at ' + req.sanitize(req.body.email)
-                    result += 'Your password is: ' + req.sanitize(req.body.password) + ' and your hashed password is: ' + hashedPassword
+                    var result = 'Hello ' + req.sanitize(req.body.first) + ' ' + req.sanitize(req.body.last) + ' you are now registered!  We will send an email to you at ' + req.sanitize(req.body.email) + '<a href=' + '../' + '>Home</a>';
                     res.send(result)
                 }
             })
         })
-        // saving data in database
-        //res.send(' Hello ' + req.body.first + ' ' + req.body.last + ' you are now registered!  We will send an email to you at ' + req.body.email)
     }
-})
-
-router.get('/list', function (req, res, next) {
-    let sqlquery = "SELECT username, firstName, LastName, email FROM users" // query database to get all the users
-    // execute sql query
-    db.query(sqlquery, (err, result) => {
-        if (err) {
-            next(err)
-        }
-        res.render("listusers.ejs", { users: result })
-    })
 })
 
 router.get('/login', function (req, res, next) {
@@ -108,14 +94,14 @@ router.post('/loggedin', function (req, res, next) {
                 res.send("Login failed!");
             }
         })
-        //res.render("listusers.ejs", { users: result })
     })
 })
 
-router.get('/myevents/:id', redirectLogin, (req, res) => {
+router.get('/myevents/:id', redirectLogin, (req, res, next) => {
     try {
         const userId = req.params.id;
-        let sqlquery = `SELECT events.*
+        let sqlquery = `SELECT events.*,
+                        ADDTIME(events.startTime, SEC_TO_TIME(events.duration * 60)) AS endTime
                         FROM attendees
                         JOIN events 
                         ON attendees.eventId = events.id

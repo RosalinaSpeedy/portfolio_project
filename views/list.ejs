@@ -43,11 +43,13 @@
           </p>
           <p>Organised by: <%=event.username%>
           </p>
-          <% if (event.yourEvent || event.userAttending) { %>
+          <% if (event.yourEvent) { %>
             <p>This is your event!</p>
             <a href="ammendbooking/<%=event.id%>" id="ammendBookingButton">Get more tickets</a>
-            <% } else { %>
-              <a href="getticket/<%=event.id%>" id="getTicketButton">Get Ticket</a>
+            <% } else if (event.attending) { %>
+              <a href="ammendbooking/<%=event.id%>" id="getTicketButton">Ammend your booking</a>
+              <% } else { %>
+                <a href="getticket/<%=event.id%>" id="getTicketButton">Get Ticket</a>
               <% } %>
         </div>
       </li>
@@ -181,7 +183,7 @@
               if (event.latitude && event.longitude) {
                   console.log("adding marker");
                   let markerLocation = { lat: event.latitude, lng: event.longitude };
-                  let pngIcon = new H.map.Icon('/abdulMarker.jpeg', { size: { w: 36, h: 36 } });
+                  let pngIcon = new H.map.Icon('/marker.webp', { size: { w: 36, h: 36 } });
                   let marker = new H.map.Marker(markerLocation, { icon: pngIcon });
                   console.log(marker)
                   // Add marker to the map
@@ -192,27 +194,6 @@
           });
           // Add the group to the map
           map.addObject(markerGroup);
-
-          // // Adjust the map's viewport to show all markers
-          // map.getViewModel().setLookAtData({
-          //     bounds: markerGroup.getBoundingBox()
-          // });
-          // for (let i = 0; i < events.length; i++) {
-          //   // Marker code goes here
-          //   var LocationOfMarker = { lat: 51.5072, lng: 0.1276 };
-
-          //   // optionally - resize a larger PNG image to a specific size
-          //   var pngIcon = new H.map.Icon('/abdulMarker.jpeg', { size: { w: 36, h: 36 } });
-
-          //   // Create a marker using the previously instantiated icon:
-          //   var marker = new H.map.Marker(LocationOfMarker, { icon: pngIcon });
-
-          //   // Add the marker to the map:
-          //   map.addObject(marker);
-          // }
-          // Optionally, 
-          //Show the marker in the center of the map
-          //map.setCenter(LocationOfMarker)
         }
       });
     }

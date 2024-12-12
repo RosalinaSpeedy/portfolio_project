@@ -15,14 +15,6 @@
     <input id="search_box" type="text" name="search_text" value="">
     <h1>Filters:</h1>
     <p>date:<input type="date" id="date" name="date" value=""></p>
-    <p><input type="text" id="location" name="location" placeholder="Enter event address" value=""></p>
-    <p>distance:<select id="distance" name="distance">
-        <option value="5">5 miles</option>
-        <option value="10">10 miles</option>
-        <option value="25">25 miles</option>
-        <option value="50">50 miles</option>
-        <option value="na">N/A</option>
-      </select></p>
     <p>
       <input type="range" id="ticketCost" name="ticketCost" min="0" max="500" step="10" value="250"
         oninput="updateCostValue(this.value)">
@@ -57,22 +49,6 @@
       }
     });
   }
-
-  function getLocation() {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(showPosition);
-    } else {
-      alert("Geolocation is not supported by this browser.");
-    }
-  }
-
-  function showPosition(position) {
-    alert("Latitude: " + position.coords.latitude +
-    " Longitude: " + position.coords.longitude);
-  }
-
-  getLocation();
-  showPosition();
 </script>
 
 </html>
