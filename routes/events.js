@@ -75,13 +75,13 @@ function getEvents(pageName, filters) {
                                             console.log("distance from user: " + distance)
                                             if (distance <= distanceLimit) {
                                                 console.log("event within the limit found: " + distance)
-                                                event.distance = distance.toFixed(2); // Add distance to event data
+                                                event.distance = distance.toFixed(2);
                                                 event.longitude = eventCoords.lng;
                                                 event.latitude = eventCoords.lat;
                                                 resolve(event);
                                             } else {
                                                 console.log("Outside the limit: " + distance)
-                                                resolve(null); // Exclude events outside the range
+                                                resolve(null); // Remove event if it isn't in range
                                             }
                                         } else {
                                             resolve(null);
@@ -113,19 +113,29 @@ function getEvents(pageName, filters) {
     });
 }
 
-let haversineDistance = (lat1, lon1, lat2, lon2) => {
-    const toRadians = (degree) => degree * (Math.PI / 180);
-    const R = 6371; // Earth's radius in km
-
-    const dLat = toRadians(lat2 - lat1);
-    const dLon = toRadians(lon2 - lon1);
-    const a = Math.sin(dLat / 2) ** 2 +
-        Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
-        Math.sin(dLon / 2) ** 2;
-
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // Distance in km
-};
+// haversine function: obtained from: https://stackoverflow.com/questions/14560999/using-the-haversine-formula-in-javascript
+function haversineDistance(lat1Deg, lon1Deg, lat2Deg, lon2Deg) {
+    function toRad(degree) {
+        return degree * Math.PI / 180;
+    }
+    
+    const lat1 = toRad(lat1Deg);
+    const lon1 = toRad(lon1Deg);
+    const lat2 = toRad(lat2Deg);
+    const lon2 = toRad(lon2Deg);
+    
+    const { sin, cos, sqrt, atan2 } = Math;
+    
+    const R = 6371; // earth radius in km 
+    const dLat = lat2 - lat1;
+    const dLon = lon2 - lon1;
+    const a = sin(dLat / 2) * sin(dLat / 2)
+            + cos(lat1) * cos(lat2)
+            * sin(dLon / 2) * sin(dLon / 2);
+    const c = 2 * atan2(sqrt(a), sqrt(1 - a)); 
+    const d = R * c;
+    return d * 0.62137; // distance in miles
+}
 
 router.get('/list', redirectLogin, function (req, res, next) {
     let sqlquery = `SELECT events.*, users.username, 
@@ -200,7 +210,6 @@ router.post('/eventadded', redirectLogin, [
         }
 
         console.log(processedLocation)
-        //(id INT AUTO_INCREMENT,name VARCHAR(50),fees DECIMAL(5, 2) unsigned, location VARCHAR(50), date DATE, createdAt DATE, updatedAt DATE, startTime TIME, duration INT, status VARCHAR(50), description VARCHAR(100), organiserId INT, FOREIGN KEY (organiserId) REFERENCES users(id), PRIMARY KEY(id));
         let sqlquery = "INSERT INTO events (name, fees, location, date, createdAt, updatedAt, startTime, duration, description, organiserId) VALUES (?,?,?,?,NOW(),NOW(),?,?,?,?)"
         // execute sql query
         let newrecord = [
@@ -229,7 +238,7 @@ router.post('/eventadded', redirectLogin, [
                         console.log(result1);
                     }
                 })
-                res.send(' This event is added to database, name: ' + req.sanitize(req.body.name) + ' price ' + req.sanitize(req.body.fees))
+                res.send(' This event is added to database, name: ' + req.sanitize(req.body.name) + ' price ' + req.sanitize(req.body.fees) + ' <a href=' + '../' + '>Home</a>')
             }
         })
     }
@@ -282,7 +291,7 @@ router.get("/getticket/:id", redirectLogin, (req, res) => {
             res.render("getticket.ejs", { event: result[0] })
         })
     } catch {
-        res.send("Something done gone wrong");
+        res.send("An unexpected error has occurred <a href=' + '../' + '>Home</a>");
     }
 });
 
@@ -311,7 +320,7 @@ router.get("/ammendbooking/:id", redirectLogin, (req, res) => {
             res.render("ammendbooking.ejs", { event: result[0] })
         })
     } catch {
-        res.send("Something done gone wrong");
+        res.send("An unexpected error has occurred <a href=' + '../' + '>Home</a>");
     }
 });
 
@@ -337,14 +346,14 @@ router.post("/eventbooked/:id", redirectLogin, (req, res) => {
             insertParams = [result[0].id, req.session.databaseId, req.body.attendees];
             db.query(insertquery, insertParams, (err, result1) => {
                 if (err) {
-                    res.send("database insert failed");
+                    res.send("database insert failed - please try again <a href=' + '../' + '>Home</a>");
                 }
                 result.ticketNo = req.body.attendees;
                 res.render("eventbooked.ejs", { event: result[0] })
             })
         })
     } catch {
-        res.send("Error");
+        res.send("Something went wrong in the booking process, please try again <a href=' + '../' + '>Home</a>");
     }
 });
 
@@ -391,7 +400,7 @@ router.get("/viewevent/:id", redirectLogin, (req, res) => {
             })
         })
     } catch {
-        res.send("Something done gone wrong");
+        res.send("An unexpected error has occurred <a href=' + '../' + '>Home</a>");
     }
 });
 

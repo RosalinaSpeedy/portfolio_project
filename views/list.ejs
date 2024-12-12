@@ -82,149 +82,94 @@
   <div id="mapContainer2" style="width:50%; height:400px"></div>
 
 </body>
-<script>
-  console.log("testing getting locations");
-  const events = <%- JSON.stringify(events) %>;
-  console.log("locations got")
+<script src="../list_static.js"> 
 </script>
 <script>
-  function prettyLocation(location) {
-    let empty = "";
-    let splitLocation = location.split(';');
-    console.log(splitLocation)
-    if (splitLocation.length > 1) {
-      empty += "Location: "
-    }
-    for (let i = 0; i < splitLocation.length; i++) {
-      let tmpWord = splitLocation[i].split("=");
-      console.log(tmpWord[tmpWord.length - 1]);
-      if (tmpWord[tmpWord.length - 1] !== '') {
-        empty += tmpWord[tmpWord.length - 1];
-        empty += ", ";
-      }
-    }
-    return empty;
-  }
-  function setPrettyLocations() {
-    let locations = document.getElementsByClassName("locationString")
-    for (let i = 0; i < locations.length; i++) {
-      locations[i].innerText = prettyLocation(locations[i].innerText)
-    }
-  }
-
-  setPrettyLocations();
-  
-  //Step 1: initialize communication with the platform
-  // Replace variable YOUR_API_KEY with your own apikey
-  var platform = new H.service.Platform({
+console.log("testing getting locations");
+const events = JSON.parse(document.getElementById('eventsData').innerText)
+console.log("locations got")
+var platform = new H.service.Platform({
     apikey: '<%=apiKey%>',
     appCode: '<%=appCode%>'
-  });
-  var defaultLayers = platform.createDefaultLayers();
-  //Step 2: initialize a map - this map is centered over Europe
-  var map = new H.Map(document.getElementById('mapContainer2'),
+});
+var defaultLayers = platform.createDefaultLayers();
+
+var map = new H.Map(document.getElementById('mapContainer2'),
     defaultLayers.vector.normal.map,
     {
-      center: { lat: 51.5072, lng: 0.1276 },
-      zoom: 4,
-      pixelRatio: window.devicePixelRatio || 1
+        center: { lat: 51.5072, lng: 0.1276 }, // london
+        zoom: 4,
+        pixelRatio: window.devicePixelRatio || 1
     }
-  );
-  // add a resize listener to make sure that the map occupies the whole container
-  window.addEventListener('resize', () => map.getViewPort().resize());
-  //Step 3: make the map interactive
-  // MapEvents enables the event system
-  // Behavior implements default interactions for pan/zoom (also on mobile touch environments)
-  var behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
+);
+window.addEventListener('resize', () => map.getViewPort().resize());
+var behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
 
-  // Create the default UI components
-  var ui = H.ui.UI.createDefault(map, defaultLayers);
+var ui = H.ui.UI.createDefault(map, defaultLayers);
+map.setZoom(8)
+let userLocation = { latitude: null, longitude: null };
 
-  //Zooming so that the marker can be clearly visible
-  map.setZoom(8)
-  let userLocation = { latitude: null, longitude: null };
-
-  function getLocation() {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(function (position) {
-        userLocation.latitude = position.coords.latitude;
-        userLocation.longitude = position.coords.longitude;
-      });
-    } else {
-      console.log("Geolocation is not supported by this browser.");
-    }
-  }
-  getLocation();
-  function updateCostValue(val) {
-    document.getElementById('ticketCostValue').innerText = 'Ticket cost up to: £' + val;
-  }
-
-  $(document).ready(function () {
+$(document).ready(function () {
     // v1 submit the form every time the data change
     $('#filters').find('input, select, range').on('change', updateListData);
     function updateListData() {
-      console.log("changed form")
-      if (!userLocation.latitude || !userLocation.longitude) {
-        console.error("User location is not available yet.");
-        return;
-      }
-      const formData = $('#filters').serializeArray();
-      formData.push(
-        { name: "latitude", value: userLocation.latitude },
-        { name: "longitude", value: userLocation.longitude }
-      );
-      $.ajax({
-        type: "GET",
-        url: `./search_result`,
-        data: formData,
-        success: function (response) {
-          console.log("succeeded")
-          //console.log(response);
-          var tempDiv = $('<div>').html(response);
-          var newList = tempDiv.find('.eventList');
-          var newLocations = tempDiv.find("#eventsData");
-          $('.eventList').html(newList.html());
-          $('.eventList').removeClass('newDataLoadedEffect');
-          void $('.eventList')[0].offsetWidth;
-          $('.eventList').addClass('newDataLoadedEffect');
-          $("#eventsData").html(newLocations.html());
-          $("#eventsData").removeClass('newDataLoadedEffect');
-          void $("#eventsData")[0].offsetWidth;
-          setPrettyLocations();
-          $("#eventsData").addClass('newDataLoadedEffect');
-          // Clear existing markers
-          map.getObjects().forEach(object => {
-             if (object instanceof H.map.Group) {
-              console.log("removing marker");
-              map.removeObject(object);
-            }
-          });
-
-          // Parse events from response if provided
-          let events = JSON.parse(tempDiv.find('#eventsData').text());
-          let markerGroup = new H.map.Group();
-          // Add new markers to the map
-          events.forEach(event => {
-            console.log("event found");
-            console.log(event);
-              if (event.latitude && event.longitude) {
-                  console.log("adding marker");
-                  let markerLocation = { lat: event.latitude, lng: event.longitude };
-                  let pngIcon = new H.map.Icon('../marker.webp', { size: { w: 36, h: 36 } });
-                  let marker = new H.map.Marker(markerLocation, { icon: pngIcon });
-                  console.log(marker)
-                  // Add marker to the map
-                  markerGroup.addObject(marker);
-              } else {
-                console.log("Invalid latitude and longitude");
-              }
-          });
-          // Add the group to the map
-          map.addObject(markerGroup);
+        console.log("changed form")
+        if (!userLocation.latitude || !userLocation.longitude) {
+            console.error("User location is not available yet.");
+            return;
         }
-      });
+        const formData = $('#filters').serializeArray();
+        formData.push(
+            { name: "latitude", value: userLocation.latitude },
+            { name: "longitude", value: userLocation.longitude }
+        );
+        $.ajax({
+            type: "GET",
+            url: `./search_result`,
+            data: formData,
+            success: function (response) {
+                console.log("succeeded")
+                var tempDiv = $('<div>').html(response);
+                var newList = tempDiv.find('.eventList');
+                var newLocations = tempDiv.find("#eventsData");
+                $('.eventList').html(newList.html());
+                $('.eventList').removeClass('newDataLoadedEffect');
+                void $('.eventList')[0].offsetWidth;
+                $('.eventList').addClass('newDataLoadedEffect');
+                $("#eventsData").html(newLocations.html());
+                $("#eventsData").removeClass('newDataLoadedEffect');
+                void $("#eventsData")[0].offsetWidth;
+                setPrettyLocations();
+                $("#eventsData").addClass('newDataLoadedEffect');
+                // Clear markers from map
+                map.getObjects().forEach(object => {
+                    if (object instanceof H.map.Group) {
+                        console.log("removing marker");
+                        map.removeObject(object);
+                    }
+                });
+                let events = JSON.parse(tempDiv.find('#eventsData').text());
+                let markerGroup = new H.map.Group();
+                events.forEach(event => {
+                    console.log("event found");
+                    console.log(event);
+                    if (event.latitude && event.longitude) {
+                        console.log("adding marker");
+                        let markerLocation = { lat: event.latitude, lng: event.longitude };
+                        let pngIcon = new H.map.Icon('../marker.webp', { size: { w: 36, h: 36 } });
+                        let marker = new H.map.Marker(markerLocation, { icon: pngIcon });
+                        console.log(marker)
+                        // Add marker to the map
+                        markerGroup.addObject(marker);
+                    } else {
+                        console.log("Invalid latitude and longitude");
+                    }
+                });
+                map.addObject(markerGroup);
+            }
+        });
     }
-  })
+})
 </script>
 
 </html>

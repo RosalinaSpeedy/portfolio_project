@@ -38,7 +38,7 @@ router.post('/registered', [check('email').isEmail(), check('password').isLength
                     next(err)
                 }
                 else {
-                    var result = 'Hello ' + req.sanitize(req.body.first) + ' ' + req.sanitize(req.body.last) + ' you are now registered!  We will send an email to you at ' + req.sanitize(req.body.email) + '<a href=' + '../' + '>Home</a>';
+                    var result = 'Hello ' + req.sanitize(req.body.first) + ' ' + req.sanitize(req.body.last) + ' you are now registered!  We will send an email to you at ' + req.sanitize(req.body.email) + ' <a href=' + '../' + '>Home</a>';
                     res.send(result)
                 }
             })
@@ -61,7 +61,7 @@ router.post('/loggedin', function (req, res, next) {
         if (result.length > 0) {
             var hashedPassword = result[0].hashedPassword;
         } else {
-            res.send("User account not found!");
+            res.send("User account not found! <a href=' + '../users/login' + '>Log in page</a>");
         }
         console.log(hashedPassword);
         bcrypt.compare(req.sanitize(req.body.password), hashedPassword, function (err, result) {
@@ -91,7 +91,7 @@ router.post('/loggedin', function (req, res, next) {
                 })
             }
             else {
-                res.send("Login failed!");
+                res.send("Login failed! <a href=' + '../users/login' + '>Log in page</a>");
             }
         })
     })

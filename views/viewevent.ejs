@@ -27,7 +27,7 @@
     </h1>
     <p>Price: <%=event.fees%>
     </p>
-    <p>Location: <%=event.location%>
+    <p class="locationString">Location: <%=event.location%>
     </p>
     <p>Date: <%=event.date%>
     </p>
@@ -51,6 +51,8 @@
                 <div id="mapContainer2" style="width:50%; height:400px"></div>
 
 </body>
+<script src="/list_static.js"> 
+</script>
 <script>
     console.log("testing getting locations");
     console.log(event)
@@ -59,14 +61,13 @@
     console.log(eventStringified)
 </script>
 <script>
-    //Step 1: initialize communication with the platform
-    // Replace variable YOUR_API_KEY with your own apikey
+
     var platform = new H.service.Platform({
         apikey: '<%=apiKey%>',
         appCode: '<%=appCode%>'
     });
     var defaultLayers = platform.createDefaultLayers();
-    //Step 2: initialize a map - this map is centered over Europe
+
     var map = new H.Map(document.getElementById('mapContainer2'),
         defaultLayers.vector.normal.map,
         {
@@ -75,11 +76,8 @@
             pixelRatio: window.devicePixelRatio || 1
         }
     );
-    // add a resize listener to make sure that the map occupies the whole container
+
     window.addEventListener('resize', () => map.getViewPort().resize());
-    //Step 3: make the map interactive
-    // MapEvents enables the event system
-    // Behavior implements default interactions for pan/zoom (also on mobile touch environments)
     var behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
 
     // Create the default UI components

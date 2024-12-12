@@ -23,7 +23,7 @@
               <div class="eventCard">
                 <h1 class="eventTitle"><%=event.name%></h1>
                 <p>Price: <%=event.fees%></p>
-                <p>Location: <%=event.location%></p>
+                <p class="locationString">Location: <%=event.location%></p>
                 <p>Date: <%=event.date%></p>
                 <p><%= event.startTime + " - " + event.endTime%></p>
                 <p><%=event.description%></p>
@@ -34,4 +34,6 @@
         <% }) %>
     </ul>
     </body>
+    <script src="/list_static.js"> 
+    </script>
 </html>
