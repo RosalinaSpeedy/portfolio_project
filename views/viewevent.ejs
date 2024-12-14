@@ -18,40 +18,38 @@
 </head>
 
 <body>
-    <h1>
-        <%=siteData.siteName%>
-    </h1>
-    <h2>Event details:</h2>
-    <h1 class="eventTitle">
-        <%=event.name%>
-    </h1>
-    <p>Price: <%=event.fees%>
-    </p>
-    <p class="locationString">Location: <%=event.location%>
-    </p>
-    <p>Date: <%=event.date%>
-    </p>
-    <p>
-        <%= event.startTime + " - " + event.endTime%>
-    </p>
-    <p>
-        <%=event.description%>
-    </p>
-    <p>Organised by: <%=event.username%>
-    </p>
-    <% if (event.yourEvent || event.userAttending) { %>
-        <p>This is your event!</p>
-        <a href="ammendbooking/<%=event.id%>" id="ammendBookingButton">Get more tickets</a>
-        <% } else { %>
-            <a href="getticket/<%=event.id%>" id="getTicketButton">Get Ticket</a>
-            <% } %>
+    <%- include('navigationbar.ejs') %>
+        <div class="mainBody">
+            <%- include('sidebar.ejs') %>
+                <h1>
+                    <%=siteData.siteName%>
+                </h1>
+                <h2>Event details:</h2>
+                <h1 class="eventTitle">
+                    <%=event.name%>
+                </h1>
+                <p>Price: <%=event.fees%>
+                </p>
+                <p class="locationString">Location: <%=event.location%>
+                </p>
+                <p>Date: <%=event.date%>
+                </p>
+                <p>
+                    <%= event.startTime + " - " + event.endTime%>
+                </p>
+                <p>
+                    <%=event.description%>
+                </p>
+                <p>Organised by: <%=event.username%>
+                </p>
                 <div id="eventsData" style="display: none;">
                     <%- JSON.stringify(event) %>
                 </div>
                 <div id="mapContainer2" style="width:50%; height:400px"></div>
+        </div>
 
 </body>
-<script src="/list_static.js"> 
+<script src="/list_static.js">
 </script>
 <script>
     console.log("testing getting locations");
@@ -102,7 +100,7 @@
     if (eventStringified.latitude && eventStringified.longitude) {
         console.log("adding marker");
         let markerLocation = { lat: eventStringified.latitude, lng: eventStringified.longitude };
-        let pngIcon = new H.map.Icon('/marker.webp', { size: { w: 36, h: 36 } });
+        let pngIcon = new H.map.Icon('../marker.webp', { size: { w: 36, h: 36 } });
         let marker = new H.map.Marker(markerLocation, { icon: pngIcon });
         console.log(marker)
         // Add marker to the map

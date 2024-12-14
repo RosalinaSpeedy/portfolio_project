@@ -51,7 +51,6 @@ router.get('/login', function (req, res, next) {
 })
 
 router.post('/loggedin', function (req, res, next) {
-    // Compare the password supplied with the password in the database
     let sqlquery = "SELECT hashedPassword FROM users WHERE username=\"" + req.sanitize(req.body.username) + "\"" // query database to get password
     // execute sql query
     db.query(sqlquery, (err, result) => {
@@ -61,7 +60,7 @@ router.post('/loggedin', function (req, res, next) {
         if (result.length > 0) {
             var hashedPassword = result[0].hashedPassword;
         } else {
-            res.send("User account not found! <a href=' + '../users/login' + '>Log in page</a>");
+            res.send("User account not found! <a href=' + '../users/login'> + Log in page</a>");
         }
         console.log(hashedPassword);
         bcrypt.compare(req.sanitize(req.body.password), hashedPassword, function (err, result) {
@@ -100,25 +99,27 @@ router.post('/loggedin', function (req, res, next) {
 router.get('/myevents/:id', redirectLogin, (req, res, next) => {
     try {
         const userId = req.params.id;
-        let sqlquery = `SELECT events.*,
+        let sqlquery = `SELECT events.*, users.username,
+                        CASE 
+                        WHEN attendees.userId IS NOT NULL THEN 1 
+                        ELSE 0 
+                        END AS attending,
+                        CASE WHEN events.organiserId = ? THEN 1 
+                        ELSE 0 
+                        END AS yourEvent,
                         ADDTIME(events.startTime, SEC_TO_TIME(events.duration * 60)) AS endTime
-                        FROM attendees
-                        JOIN events 
-                        ON attendees.eventId = events.id
-                        WHERE attendees.userId = ${userId};`
-        db.query(sqlquery, (err, result) => {
+                        FROM events
+                        JOIN users 
+                        ON events.organiserId = users.id
+                        LEFT JOIN attendees 
+                        ON events.id = attendees.eventId 
+                        AND attendees.userId = ?`
+        let queryParameters = [userId, userId];
+        db.query(sqlquery, queryParameters, (err, result) => {
             if (err) {
                 next(err)
             }
-            let organiserQuery = `SELECT events.*,
-                                  ADDTIME(events.startTime, SEC_TO_TIME(events.duration * 60)) AS endTime
-                                  FROM events WHERE organiserId = ${userId}`
-            db.query(organiserQuery, (err, result1) => {
-                if (err) {
-                    next(err)
-                }
-                res.render("myevents.ejs", { events: result1, bookings: result })
-            })
+            res.render("myevents.ejs", { events: result1, bookings: result })
         })
     } catch {
         console.log("Some error occured");
