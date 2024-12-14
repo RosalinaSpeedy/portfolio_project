@@ -119,7 +119,7 @@ router.get('/myevents/:id', redirectLogin, (req, res, next) => {
             if (err) {
                 next(err)
             }
-            res.render("myevents.ejs", { events: result1, bookings: result })
+            res.render("myevents.ejs", { events: result, bookings: result })
         })
     } catch {
         console.log("Some error occured");
