@@ -21,34 +21,34 @@
     <%- include('navigationbar.ejs') %>
         <div class="mainBody">
             <%- include('sidebar.ejs') %>
-                <h1>
-                    <%=siteData.siteName%>
-                </h1>
-                <h2>Event details:</h2>
-                <h1 class="eventTitle">
-                    <%=event.name%>
-                </h1>
-                <p>Price: <%=event.fees%>
-                </p>
-                <p class="locationString">Location: <%=event.location%>
-                </p>
-                <p>Date: <%=event.date%>
-                </p>
-                <p>
-                    <%= event.startTime + " - " + event.endTime%>
-                </p>
-                <p>
-                    <%=event.description%>
-                </p>
-                <p>Organised by: <%=event.username%>
-                </p>
+                <div>
+                    <h1>
+                        <%=siteData.siteName%>
+                    </h1>
+                    <h2>Event details:</h2>
+                    <h1 class="eventTitle">
+                        <%=event.name%>
+                    </h1>
+                    <p>Price: <%=event.fees%>
+                    </p>
+                    <p class="locationString">Location: <%=event.location%>
+                    </p>
+                    <p>Date: <%=event.date%>
+                    </p>
+                    <p>
+                        <%= event.startTime + " - " + event.endTime%>
+                    </p>
+                    <p>
+                        <%=event.description%>
+                    </p>
+                    <p>Organised by: <%=event.username%>
+                    </p>
+                </div>
                 <div id="eventsData" style="display: none;">
                     <%- JSON.stringify(event) %>
                 </div>
-                <div id="mapContainer2" style="width:50%; height:400px"></div>
-            </div>
+                <div id="mapContainer2" style="width:400px; height:400px"></div>
         </div>
-
 </body>
 <script src="/list_static.js">
 </script>

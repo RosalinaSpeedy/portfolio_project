@@ -18,16 +18,18 @@
           <h2>Your organised events:</h2>
           <ul>
             <% events.forEach(function(event) { %>
-              <li class="event">
-                <div class="eventCard">
-                  <h1 class="eventTitle">
-                    <a href="../../events/viewevent/<%=event.id%>">
-                      <%=event.name%>
-                    </a>
-                  </h1>
-                </div>
-              </li>
-              <% }) %>
+              <% if (event.yourEvent) { %>
+                <li class="event">
+                  <div class="eventCard">
+                    <h1 class="eventTitle">
+                      <a href="../../events/viewevent/<%=event.id%>">
+                        <%=event.name%>
+                      </a>
+                    </h1>
+                  </div>
+                </li>
+                <% } %>
+                  <% }) %>
           </ul>
         </div>
         <div>
