@@ -60,7 +60,7 @@ router.post('/loggedin', function (req, res, next) {
         if (result.length > 0) {
             var hashedPassword = result[0].hashedPassword;
         } else {
-            res.send("User account not found! <a href=' + '../users/login'> + Log in page</a>");
+            res.send("User account not found! " + "<a href='/users/login'>" + "Log in page" + "</a>");
         }
         console.log(hashedPassword);
         bcrypt.compare(req.sanitize(req.body.password), hashedPassword, function (err, result) {
@@ -90,7 +90,7 @@ router.post('/loggedin', function (req, res, next) {
                 })
             }
             else {
-                res.send("Login failed! <a href=' + '../users/login' + '>Log in page</a>");
+                res.send("Login failed! " + "<a href='/users/login'>" + "Log in page" + "</a>");
             }
         })
     })
