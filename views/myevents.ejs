@@ -36,29 +36,31 @@
           <h2>Your bookings:</h2>
           <ul>
             <% bookings.forEach(function(event) { %>
-              <li class="event">
-                <div class="eventCard">
-                  <h1 class="eventTitle">
-                    <%=event.name%>
-                  </h1>
-                  <p>Price: <%=event.fees%>
-                  </p>
-                  <p class="locationString">Location: <%=event.location%>
-                  </p>
-                  <p>Date: <%=event.date%>
-                  </p>
-                  <p>
-                    <%= event.startTime + " - " + event.endTime%>
-                  </p>
-                  <p>
-                    <%=event.description%>
-                  </p>
-                  <p>Organised by: <%=event.username%>
-                  </p>
-                  <a href="/events/ammendbooking/<%=event.id%>" id="ammendBookingButton">Get more tickets</a>
-                </div>
-              </li>
-              <% }) %>
+              <% if (event.attending) { %>
+                <li class="event">
+                  <div class="eventCard">
+                    <h1 class="eventTitle">
+                      <%=event.name%>
+                    </h1>
+                    <p>Price: <%=event.fees%>
+                    </p>
+                    <p class="locationString">Location: <%=event.location%>
+                    </p>
+                    <p>Date: <%=event.date%>
+                    </p>
+                    <p>
+                      <%= event.startTime + " - " + event.endTime%>
+                    </p>
+                    <p>
+                      <%=event.description%>
+                    </p>
+                    <p>Organised by: <%=event.username%>
+                    </p>
+                    <a href="/events/ammendbooking/<%=event.id%>" id="ammendBookingButton">Get more tickets</a>
+                  </div>
+                </li>
+                <% } %>
+                  <% }) %>
           </ul>
         </div>
     </div>

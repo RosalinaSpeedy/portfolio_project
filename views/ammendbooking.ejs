@@ -21,6 +21,7 @@
             <p><%=event.description%></p>
             <p>Organised by: <%=event.username%></p>
             <p><%=event.id%></p>
+            <p>Your current tickets: <%=event.ticketQuantity%></p>
             <form action="../eventbooked/<%=event.id%>" method="POST">
                 <p>
                 <input type="range" id="attendees" name="attendees" min="<%=event.ticketQuantity%>" max="50" step="1" value="<%event.ticketNo%>"

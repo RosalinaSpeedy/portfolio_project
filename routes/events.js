@@ -320,16 +320,12 @@ router.get("/ammendbooking/:id", redirectLogin, (req, res) => {
                         users.username, 
                         attendees.ticketQuantity,
                         ADDTIME(events.startTime, SEC_TO_TIME(events.duration * 60)) AS endTime
-                        FROM 
-                            events
-                        JOIN 
-                            users 
-                            ON events.organiserId = users.id
-                        LEFT JOIN 
-                            attendees 
-                            ON attendees.eventId = events.id AND attendees.userId = ${req.session.databaseId}
-                        WHERE 
-                            events.id = ${eventId};`
+                        FROM events
+                        JOIN users 
+                        ON events.organiserId = users.id
+                        LEFT JOIN attendees 
+                        ON attendees.eventId = events.id AND attendees.userId = ${req.session.databaseId}
+                        WHERE events.id = ${eventId};`
         db.query(sqlquery, (err, result) => {
             if (err) {
                 next(err)
