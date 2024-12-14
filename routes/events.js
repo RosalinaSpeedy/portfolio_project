@@ -17,10 +17,24 @@ let apiKey = 'tCNGoZKIq4A6VjAmsFcEiXb1u4a56MFNrsUzfEIa3fY'
 let url = `https://js.api.here.com/v3/3.1/`
 let appCode = 'MJlbBVYv5uTduZ53sy4N'
 
-function getEvents(pageName, filters) {
+function getEvents(pageName, filters, userId) {
     return new Promise((resolve, reject) => {
-        var query = `SELECT events.*, users.username, ADDTIME(events.startTime, SEC_TO_TIME(events.duration * 60)) AS endTime FROM events 
-            JOIN users ON events.organiserId = users.id WHERE 1=1 `;
+        var query = `SELECT events.*, users.username,
+                     CASE 
+                     WHEN attendees.userId IS NOT NULL THEN 1 
+                     ELSE 0 
+                     END AS attending,
+                     CASE WHEN events.organiserId = ? THEN 1 
+                     ELSE 0 
+                     END AS yourEvent,
+                     ADDTIME(events.startTime, SEC_TO_TIME(events.duration * 60)) AS endTime
+                     FROM events
+                     JOIN users 
+                     ON events.organiserId = users.id
+                     LEFT JOIN attendees 
+                     ON events.id = attendees.eventId 
+                     AND attendees.userId = ?
+                     WHERE 1=1 `;
         console.log(filters);
 
         if (filters.searchText != '') {
@@ -41,7 +55,8 @@ function getEvents(pageName, filters) {
         console.log(filters);
         console.log(filters.latitude);
         console.log(filters.longitude);
-        db.query(query, async (err, result) => {
+        let eventParameters = [userId, userId]
+        db.query(query, eventParameters, async (err, result) => {
             if (err) {
                 console.error(err.message);
                 reject(err);
@@ -138,13 +153,13 @@ function haversineDistance(lat1Deg, lon1Deg, lat2Deg, lon2Deg) {
 }
 
 router.get('/list', redirectLogin, function (req, res, next) {
-    let sqlquery = `SELECT events.*, users.username, 
+    let sqlquery = `SELECT events.*, users.username,
                     CASE 
-                    WHEN attendees.userId IS NOT NULL THEN TRUE 
-                    ELSE FALSE 
+                    WHEN attendees.userId IS NOT NULL THEN 1 
+                    ELSE 0 
                     END AS attending,
-                    CASE WHEN events.organiserId = ${req.session.databaseId} THEN TRUE 
-                    ELSE FALSE 
+                    CASE WHEN events.organiserId = ? THEN 1 
+                    ELSE 0 
                     END AS yourEvent,
                     ADDTIME(events.startTime, SEC_TO_TIME(events.duration * 60)) AS endTime
                     FROM events
@@ -152,9 +167,10 @@ router.get('/list', redirectLogin, function (req, res, next) {
                     ON events.organiserId = users.id
                     LEFT JOIN attendees 
                     ON events.id = attendees.eventId 
-                    AND attendees.userId = ${req.session.databaseId}`;
+                    AND attendees.userId = ?`;
+    let eventParameters = [req.session.databaseId, req.session.databaseId];
     // execute sql query
-    db.query(sqlquery, (err, result) => {
+    db.query(sqlquery, eventParameters, (err, result) => {
         if (err) {
             return next(err);
         }
@@ -268,7 +284,7 @@ router.get('/search_result', redirectLogin, function (req, res, next) {
         }
     }
     Promise.all([
-        getEvents("search_result", filters)
+        getEvents("search_result", filters, req.session.databaseId)
     ]).then(([events]) => {
         res.render("list.ejs", {
             apiKey: apiKey, url: url, appCode: appCode, events: events
@@ -277,6 +293,7 @@ router.get('/search_result', redirectLogin, function (req, res, next) {
         console.log(
             "Error getting data from database calls or in the code above"
         );
+        console.log(error)
     });
 })
 

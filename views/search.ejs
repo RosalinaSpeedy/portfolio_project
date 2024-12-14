@@ -27,28 +27,6 @@
   function updateCostValue(val) {
     document.getElementById('ticketCostValue').innerText = 'Ticket cost up to: £' + val;
   }
-  function updateListData() {
-    //$('#filterForm').submit(function(e) {
-    //    e.preventDefault(); // Prevent default form submission
-    $.ajax({
-      // Send the form data to the server
-      type: "POST",
-      // url: $(this).attr('action'),
-      url: './search_result',
-      // data: $(this).serialize(), // Serialize form data for submission
-      data: $('#filterForm').serialize(),
-      success: function (response) {
-        // Update the bookings list with the response
-        $('.data-list').html($(response).find('.data-list').html());
-        // remove the new data animation if it has already been added
-        $('.data-list').removeClass('newDataLoadedEffect');
-        // force the animation to run again
-        void $('.data-list')[0].offsetWidth;
-        // re-add the animation on the new data
-        $('.data-list').addClass('newDataLoadedEffect');
-      }
-    });
-  }
 </script>
 
 </html>

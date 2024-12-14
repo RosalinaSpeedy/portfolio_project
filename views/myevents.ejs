@@ -1,39 +1,67 @@
 <!doctype html>
 <html>
-  <head>
-    <title>Welcome to <%=siteData.siteName%></title>
-    <link rel="stylesheet"  type="text/css" href="/main.css" />
-  </head>
-  <body>
-    <h1><%=siteData.siteName%></h1>
-    <h2>Your organised events:</h2>
-    <ul>
-        <% events.forEach(function(event) { %>
-            <li class="event">
-              <div class="eventCard">
-                <h1 class="eventTitle"><%=event.name%></h1>
-              </div>
-            </li>
-        <% }) %>
-    </ul>
-    <h2>Your bookings:</h2>
-    <ul>
-        <% bookings.forEach(function(event) { %>
-            <li class="event">
-              <div class="eventCard">
-                <h1 class="eventTitle"><%=event.name%></h1>
-                <p>Price: <%=event.fees%></p>
-                <p class="locationString">Location: <%=event.location%></p>
-                <p>Date: <%=event.date%></p>
-                <p><%= event.startTime + " - " + event.endTime%></p>
-                <p><%=event.description%></p>
-                <p>Organised by: <%=event.username%></p>
-                <a href="ammendbooking/<%=event.id%>" id="ammendBookingButton">Get more tickets</a>
-              </div>
-            </li>
-        <% }) %>
-    </ul>
-    </body>
-    <script src="/list_static.js"> 
-    </script>
+
+<head>
+  <title>Welcome to <%=siteData.siteName%>
+  </title>
+  <link rel="stylesheet" type="text/css" href="/main.css" />
+</head>
+
+<body>
+  <h1>
+    <%=siteData.siteName%>
+  </h1>
+  <%- include('navigationbar.ejs') %>
+    <div class="mainBody">
+      <%- include('sidebar.ejs') %>
+        <div>
+          <h2>Your organised events:</h2>
+          <ul>
+            <% events.forEach(function(event) { %>
+              <li class="event">
+                <div class="eventCard">
+                  <h1 class="eventTitle">
+                    <a href="../../events/viewevent/<%=event.id%>">
+                      <%=event.name%>
+                    </a>
+                  </h1>
+                </div>
+              </li>
+              <% }) %>
+          </ul>
+        </div>
+        <div>
+          <h2>Your bookings:</h2>
+          <ul>
+            <% bookings.forEach(function(event) { %>
+              <li class="event">
+                <div class="eventCard">
+                  <h1 class="eventTitle">
+                    <%=event.name%>
+                  </h1>
+                  <p>Price: <%=event.fees%>
+                  </p>
+                  <p class="locationString">Location: <%=event.location%>
+                  </p>
+                  <p>Date: <%=event.date%>
+                  </p>
+                  <p>
+                    <%= event.startTime + " - " + event.endTime%>
+                  </p>
+                  <p>
+                    <%=event.description%>
+                  </p>
+                  <p>Organised by: <%=event.username%>
+                  </p>
+                  <a href="ammendbooking/<%=event.id%>" id="ammendBookingButton">Get more tickets</a>
+                </div>
+              </li>
+              <% }) %>
+          </ul>
+        </div>
+    </div>
+</body>
+<script src="/list_static.js">
+</script>
+
 </html>
