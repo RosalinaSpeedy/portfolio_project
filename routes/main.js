@@ -20,9 +20,5 @@ router.get('/about', function (req, res, next) {
     res.render('about.ejs', {isLoggedIn: checkLogin(req)})
 })
 
-router.get('/events', function (req, res, next) {
-    res.render('events.ejs', {isLoggedIn: checkLogin(req)})
-})
-
 // Export the router object so index.js can access it
 module.exports = router
