@@ -9,4 +9,5 @@ Steps to set up application:
 7) run the packaged create_db.sql script
 8) Optionally - run the insert_test_data.sql script to insert an event before loading the application
 9) Run node index.js
-8) navigate to the hosted URL (usually localhost:8000) 
+10) navigate to the hosted URL (usually localhost:8000) 
+11) allow location services in your browser
