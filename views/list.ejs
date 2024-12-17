@@ -91,6 +91,7 @@
 </body>
 <script src="../list_static.js">
 </script>
+<!-- base code adapted from https://www.here.com/learn/blog/markers-here-maps-api-for-javascript -->
 <script>
   console.log("testing getting locations");
   const events = JSON.parse(document.getElementById('eventsData').innerText)
@@ -117,7 +118,7 @@
   let userLocation = { latitude: null, longitude: null };
 
   $(document).ready(function () {
-    // v1 submit the form every time the data change
+    // update the list when the form changes
     $('#filters').find('input, select, range').on('change', updateListData);
     function updateListData() {
       console.log("changed form")

@@ -46,7 +46,7 @@ function getEvents(pageName, filters, userId) {
         }
         if (filters.location != '') {
             console.log(filters.location);
-            query += ` AND events.location LIKE '%${filters.searchText}%' `;
+            query += ` AND events.location LIKE '%${filters.location}%' `;
         }
         if (filters.ticketCost != '') {
             query += ` AND events.fees<='${filters.ticketCost}' `;
