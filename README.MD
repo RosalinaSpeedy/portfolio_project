@@ -1,6 +1,6 @@
 Steps to set up application:
 
-1) extract all files to the same directory
+1) extract all files to the same directory - or, run "git clone https://github.com/RosalinaSpeedy/portfolio_project" to the desired directory
 2) install node on the computer you'll be running the app on
 3) run npm install express
 4) run npm install ejs
