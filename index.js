@@ -41,6 +41,25 @@ db.connect((err) => {
 })
 global.db = db
 
+const disconnectHandling = () => {
+    db.connect((err) => {
+        if (err) {
+            console.error('reconnection failed retrying in 5 secs', err);
+            setTimeout(disconnectHandling, 5000);
+        } else {
+            console.log('reconnected to database');
+        }
+    });
+};
+dbErrorHandling = db.on('error', (err) => {
+    console.error('error in database process', err);
+    if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+        handleDisconnect();
+    } else {
+        throw err;
+    }
+});
+
 // Create a session
 app.use(session({
     secret: 'somerandomstuff',
