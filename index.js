@@ -41,20 +41,25 @@ db.connect((err) => {
 })
 global.db = db
 
-const disconnectHandling = () => {
+function disconnectHandling(runs) {
     db.connect((err) => {
         if (err) {
-            console.error('reconnection failed retrying in 5 secs', err);
-            setTimeout(disconnectHandling, 5000);
+            if (runs < 5) {
+                console.error('reconnection failed retrying in 5 secs', err);
+                setTimeout(disconnectHandling(runs + 1), 5000);
+            } else {
+                console.log("five failed attempts to reconnect");
+                throw(err);
+            }
         } else {
             console.log('reconnected to database');
         }
     });
 };
-dbErrorHandling = db.on('error', (err) => {
+db.on('error', (err) => {
     console.error('error in database process', err);
     if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-        handleDisconnect();
+        disconnectHandling(0);
     } else {
         throw err;
     }
