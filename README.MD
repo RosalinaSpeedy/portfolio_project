@@ -3,7 +3,7 @@ If the mysql server boots you off - you will get an error stating that:
 "Can't add new command when connection is in closed state"
 To get around this: Go to the base root ("/", or the index page) - and RELOAD THE PAGE;
 
-This will prompt a reconnect. :)
+This will prompt a reconnect (you may have to wait about 30 seconds for everything to kick in). :)
 
 Steps to set up application:
 
