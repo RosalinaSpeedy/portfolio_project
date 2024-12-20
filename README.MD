@@ -1,3 +1,10 @@
+IMPORTANT:
+If the mysql server boots you off - you will get an error stating that:
+"Can't add new command when connection is in closed state"
+To get around this: Go to the base root ("/", or the index page) - and RELOAD THE PAGE;
+
+This will prompt a reconnect. :)
+
 Steps to set up application:
 
 1) extract all files to the same directory - or, run "git clone https://github.com/RosalinaSpeedy/portfolio_project" to the desired directory
