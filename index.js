@@ -39,14 +39,13 @@ db.connect((err) => {
     }
     console.log('Connected to database')
 })
-global.db = db
 
 function disconnectHandling(runs) {
     db.connect((err) => {
         if (err) {
             if (runs < 5) {
-                console.error('reconnection failed retrying in 5 secs', err);
-                setTimeout(disconnectHandling(runs + 1), 5000);
+                console.log('reconnection failed retrying in 5 secs', err);
+                setTimeout(() => disconnectHandling(runs + 1), 5000);
             } else {
                 console.log("five failed attempts to reconnect");
                 throw(err);
@@ -64,6 +63,8 @@ db.on('error', (err) => {
         throw err;
     }
 });
+
+global.db = db
 
 // Create a session
 app.use(session({
